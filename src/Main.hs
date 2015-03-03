@@ -2,11 +2,12 @@ module Main where
 
 import qualified Data.List.Zipper    as Z
 import qualified Data.Vector.Generic as V
--- NB: Comments will distinguish between "tape" for memoryspace,
---     and "machine" for command sequence.
 
+-- Tape for "memory"
 newtype Cell    = Int
 newtype Tape    = Zipper Cell
+
+-- Machine for command sequence
 newtype Index   = Int
 newtype Machine = V.Vector Command
 
@@ -35,31 +36,32 @@ lex :: String -> Machine
 lex = map charToCommand
 
 afterLoopStart :: Index -> Machine -> Index
-afterLoopStart pos machine = if machine ! pos == LoopStart
-                               then succ pos
-                               else findLoopStart (pred pos) machine
+afterLoopStart ind machine = if machine ! ind == LoopStart
+                               then succ ind
+                               else findLoopStart (pred ind) machine
 
 afterLoopEnd :: Index -> Machine -> Index
-afterLoopEnd pos machine = if machine ! (pred pos) == LoopEnd
-                             then pos
-                             else indexAfterLoop (succ pos) machine
+afterLoopEnd ind machine = if machine ! (pred ind) == LoopEnd
+                             then succ ind
+                             else indexAfterLoop (succ ind) machine
 
 -- This probably belongs in `main`, for obvious reasons
-stepMachine :: Tape -> Command -> (Maybe IO (), Tape)
-stepMachine (Z.Zip [] []) command = stepMachine (Z.insert 0 tape) command
-stepMachine tape          command = case command of
-  TapeLeft       -> Z.left tape
-  TapeRight      -> Z.right tape
-  IncrementCell  -> Z.replace (succ cell) tape
-  DecrementCell  -> Z.replace (pred cell) tape
-  WriteFromCell  -> _ -- print to $STDOUT
-  ReadToCell     -> _ -- ask for input
-  LoopStart      -> if cell == 0
-                     then _ -- find the instruction AFTER the next LoopEnd
-                     else tape
-  LoopEnd        -> if cell /= 0
-                     then tape
-                     else _ -- find instruction right AFTER the last LoopStart
+stepMachine :: Tape -> Index -> Machine -> (Maybe IO (), Tape)
+stepMachine (Z.Zip _ []) ind mach = step $ Z.insert 0 tape
+stepMachine tape         ind mach = case mach ! ind of
+  TapeLeft      -> step $ Z.left tape
+  TapeRight     -> step $ Z.right tape
+  IncrementCell -> step $ Z.replace (succ cell) tape
+  DecrementCell -> step $ Z.replace (pred cell) tape
+  WriteFromCell -> _ -- $STDOUT cell and next
+  ReadToCell    -> _ -- ask for input; `next $ Z.replace input tape`
+  LoopStart     -> if cell == 0
+                    then stepMachine tape (afterLoopStart ind mach)
+                    else step tape
+  LoopEnd       -> if cell /= 0
+                    then stepMachine tape (afterLoopEnd ind mach)
+                    else step tape
   where cell = Z.cursor tape
+        step tape' = stepMachine tape' (succ ind) machfd fs
 
 main = putStrLn "Hello World"
