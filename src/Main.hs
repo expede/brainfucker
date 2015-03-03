@@ -2,6 +2,7 @@ module Main where
 
 import qualified Data.List.Zipper    as Z
 import qualified Data.Vector.Generic as V
+import qualified Data.Char           as C
 
 -- Tape for "memory"
 newtype Cell    = Int
@@ -55,8 +56,8 @@ stepMachine tape         ind mach = case mach ! ind of
   IncrementCell -> step $ Z.replace (succ cell) tape
   DecrementCell -> step $ Z.replace (pred cell) tape
 
-  PrintCell     -> _ -- $STDOUT cell and next
-  OverwriteCell -> _ -- ask for input; `putStrLn "Enter a character: "; input <- getLine; next $ Z.replace input tape`
+  PrintCell     -> _ -- $STDOUT (intToDigit cell) and next
+  OverwriteCell -> _ -- ask for input; `putStrLn "Enter a character: "; input <- getLine; next $ Z.replace (ord input) tape`
 
   LoopStart     -> if cell == 0
                     then stepMachine tape (afterLoopStart ind mach)
@@ -66,6 +67,6 @@ stepMachine tape         ind mach = case mach ! ind of
                     else step tape
   _             -> next tape
   where cell = Z.cursor tape
-        step tape' = stepMachine tape' (succ ind) machfd fs
+        step tape' = stepMachine tape' (succ ind) mach
 
 main = putStrLn "Hello World"
