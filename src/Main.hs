@@ -16,8 +16,8 @@ data Command = TapeLeft
              | DecrementCell
              | WriteFromCell
              | ReadToCell
-             | ControlJumpRight
-             | ControlJumpLeft
+             | LoopStart
+             | LoopEnd
 
 charToCommand :: Char -> Command
 charToCommand c = case c of
@@ -27,28 +27,38 @@ charToCommand c = case c of
   '-' -> DecrementCell
   '.' -> WriteFromCell
   ',' -> ReadToCell
-  '[' -> ControlJumpRight
-  ']' -> ControlJumpLeft
+  '[' -> LoopStart
+  ']' -> LoopEnd
   _   -> error "invalid character"
 
 lex :: String -> Machine
 lex = map charToCommand
 
-operateMachine :: Tape -> Command -> Tape
-operateMachine (Zip [] []) _       = Z.insert 0 tape
-operateMachine tape        command = case command of
-  TapeLeft         -> Z.left tape
-  TapeRight        -> Z.right tape
-  IncrementCell    -> Z.replace (succ pointer) tape
-  DecrementCell    -> Z.replace (pred pointer) tape
-  WriteFromCell    -> _ -- print to $STDOUT
-  ReadToCell       -> _ -- ask for input
-  ControlJumpRight -> if pointer == 0
-                       then _ -- find the instruction AFTER the next JumpBackward
-                       else tape
-  ControlJumpLeft  -> if pointer /= 0
-                       then tape
-                       else _ -- find instruction right AFTER the last JumpForward
+indexAfterStart :: Index -> Machine -> Index
+loopAfterStart pos machine = if machine ! pos == LoopStart
+                              then succ pos
+                              else findLoopStart (pred pos) machine
+
+indexAfterLoop :: Index -> Machine -> Index
+indexAfterLoop pos machine = if machine ! (pred pos) == LoopEnd
+                               then pos
+                               else indexAfterLoop (succ pos) machine
+
+stepMachine :: Tape -> Command -> Tape
+stepMachine (Z.Zip [] []) command = operateMachine (Z.insert 0 tape) command
+stepMachine tape          command = case command of
+  TapeLeft       -> Z.left tape
+  TapeRight      -> Z.right tape
+  IncrementCell  -> Z.replace (succ pointer) tape
+  DecrementCell  -> Z.replace (pred pointer) tape
+  WriteFromCell  -> _ -- print to $STDOUT
+  ReadToCell     -> _ -- ask for input
+  LoopStart      -> if pointer == 0
+                     then _ -- find the instruction AFTER the next JumpBackward
+                     else tape
+  LoopEnd        -> if pointer /= 0
+                     then tape
+                     else _ -- find instruction right AFTER the last JumpForward
   where pointer = Z.cursor tape
 
 main = putStrLn "Hello World"
