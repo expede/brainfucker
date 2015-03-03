@@ -2,11 +2,12 @@ module Main where
 
 import qualified Data.List.Zipper    as Z
 import qualified Data.Vector.Generic as V
--- NB: Comments will distinguish between "tape" for memoryspace,
---     and "machine" for command sequence.
 
+-- Tape for "memory"
 newtype Cell    = Int
 newtype Tape    = Zipper Cell
+
+-- Machine for command sequence
 newtype Index   = Int
 newtype Machine = V.Vector Command
 
@@ -16,8 +17,8 @@ data Command = TapeLeft
              | DecrementCell
              | WriteFromCell
              | ReadToCell
-             | ControlJumpRight
-             | ControlJumpLeft
+             | LoopStart
+             | LoopEnd
 
 charToCommand :: Char -> Command
 charToCommand c = case c of
@@ -27,28 +28,40 @@ charToCommand c = case c of
   '-' -> DecrementCell
   '.' -> WriteFromCell
   ',' -> ReadToCell
-  '[' -> ControlJumpRight
-  ']' -> ControlJumpLeft
+  '[' -> LoopStart
+  ']' -> LoopEnd
   _   -> error "invalid character"
 
 lex :: String -> Machine
 lex = map charToCommand
 
-operateMachine :: Tape -> Command -> Tape
-operateMachine (Zip [] []) _       = Z.insert 0 tape
-operateMachine tape        command = case command of
-  TapeLeft         -> Z.left tape
-  TapeRight        -> Z.right tape
-  IncrementCell    -> Z.replace (succ pointer) tape
-  DecrementCell    -> Z.replace (pred pointer) tape
-  WriteFromCell    -> _ -- print to $STDOUT
-  ReadToCell       -> _ -- ask for input
-  ControlJumpRight -> if pointer == 0
-                       then _ -- find the instruction AFTER the next JumpBackward
-                       else tape
-  ControlJumpLeft  -> if pointer /= 0
-                       then tape
-                       else _ -- find instruction right AFTER the last JumpForward
-  where pointer = Z.cursor tape
+afterLoopStart :: Index -> Machine -> Index
+afterLoopStart ind machine = if machine ! ind == LoopStart
+                               then succ ind
+                               else findLoopStart (pred ind) machine
+
+afterLoopEnd :: Index -> Machine -> Index
+afterLoopEnd ind machine = if machine ! (pred ind) == LoopEnd
+                             then succ ind
+                             else indexAfterLoop (succ ind) machine
+
+-- This probably belongs in `main`, for obvious reasons
+stepMachine :: Tape -> Index -> Machine -> (Maybe IO (), Tape)
+stepMachine (Z.Zip _ []) ind mach = step $ Z.insert 0 tape
+stepMachine tape         ind mach = case mach ! ind of
+  TapeLeft      -> step $ Z.left tape
+  TapeRight     -> step $ Z.right tape
+  IncrementCell -> step $ Z.replace (succ cell) tape
+  DecrementCell -> step $ Z.replace (pred cell) tape
+  WriteFromCell -> _ -- $STDOUT cell and next
+  ReadToCell    -> _ -- ask for input; `next $ Z.replace input tape`
+  LoopStart     -> if cell == 0
+                    then stepMachine tape (afterLoopStart ind mach)
+                    else step tape
+  LoopEnd       -> if cell /= 0
+                    then stepMachine tape (afterLoopEnd ind mach)
+                    else step tape
+  where cell = Z.cursor tape
+        step tape' = stepMachine tape' (succ ind) machfd fs
 
 main = putStrLn "Hello World"
