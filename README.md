@@ -2,7 +2,7 @@
 A simple [Brainfuck](http://esolangs.org/wiki/Brainfuck) interpreter in Haskell
 
 | Branch | Build Status |
-|--------|-------------:|
+|--------|--------------|
 | Master | [![Circle CI](https://circleci.com/gh/expede/brainfucker/tree/master.svg?style=svg)](https://circleci.com/gh/expede/brainfucker/tree/master) |
 
 # Installation
