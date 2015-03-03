@@ -1,5 +1,10 @@
 module Main where
 
+import Data.List.Zipper
+
+-- Using a "tape" metaphor
+newtype Tape = [Int]
+
 data Command = MoveLeft
              | MoveRight
              | IncrementValue
