@@ -1,2 +1,2 @@
-# brainfuck_haskell
-Brainfuck interpreter in Haskell
+# BrainfuckHaskell
+A simple Brainfuck interpreter in Haskell
