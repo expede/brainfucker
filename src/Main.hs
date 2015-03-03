@@ -36,29 +36,30 @@ lex = map charToCommand
 
 afterLoopStart :: Index -> Machine -> Index
 afterLoopStart pos machine = if machine ! pos == LoopStart
-                              then succ pos
-                              else findLoopStart (pred pos) machine
+                               then succ pos
+                               else findLoopStart (pred pos) machine
 
 afterLoopEnd :: Index -> Machine -> Index
 afterLoopEnd pos machine = if machine ! (pred pos) == LoopEnd
-                               then pos
-                               else indexAfterLoop (succ pos) machine
+                             then pos
+                             else indexAfterLoop (succ pos) machine
 
-stepMachine :: Tape -> Command -> Tape
-stepMachine (Z.Zip [] []) command = operateMachine (Z.insert 0 tape) command
+-- This probably belongs in `main`, for obvious reasons
+stepMachine :: Tape -> Command -> (Maybe IO (), Tape)
+stepMachine (Z.Zip [] []) command = stepMachine (Z.insert 0 tape) command
 stepMachine tape          command = case command of
   TapeLeft       -> Z.left tape
   TapeRight      -> Z.right tape
-  IncrementCell  -> Z.replace (succ pointer) tape
-  DecrementCell  -> Z.replace (pred pointer) tape
+  IncrementCell  -> Z.replace (succ cell) tape
+  DecrementCell  -> Z.replace (pred cell) tape
   WriteFromCell  -> _ -- print to $STDOUT
   ReadToCell     -> _ -- ask for input
-  LoopStart      -> if pointer == 0
-                     then _ -- find the instruction AFTER the next JumpBackward
+  LoopStart      -> if cell == 0
+                     then _ -- find the instruction AFTER the next LoopEnd
                      else tape
-  LoopEnd        -> if pointer /= 0
+  LoopEnd        -> if cell /= 0
                      then tape
-                     else _ -- find instruction right AFTER the last JumpForward
-  where pointer = Z.cursor tape
+                     else _ -- find instruction right AFTER the last LoopStart
+  where cell = Z.cursor tape
 
 main = putStrLn "Hello World"
