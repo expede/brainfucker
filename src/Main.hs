@@ -34,13 +34,13 @@ charToCommand c = case c of
 lex :: String -> Machine
 lex = map charToCommand
 
-indexAfterStart :: Index -> Machine -> Index
-loopAfterStart pos machine = if machine ! pos == LoopStart
+afterLoopStart :: Index -> Machine -> Index
+afterLoopStart pos machine = if machine ! pos == LoopStart
                               then succ pos
                               else findLoopStart (pred pos) machine
 
-indexAfterLoop :: Index -> Machine -> Index
-indexAfterLoop pos machine = if machine ! (pred pos) == LoopEnd
+afterLoopEnd :: Index -> Machine -> Index
+afterLoopEnd pos machine = if machine ! (pred pos) == LoopEnd
                                then pos
                                else indexAfterLoop (succ pos) machine
 
