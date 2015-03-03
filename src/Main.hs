@@ -30,7 +30,7 @@ charToCommand c = case c of
   ',' -> ReadToCell
   '[' -> LoopStart
   ']' -> LoopEnd
-  _   -> error "invalid character"
+  _   -> Ignore -- Optimize out later by skipping
 
 lex :: String -> Machine
 lex = map charToCommand
@@ -61,6 +61,7 @@ stepMachine tape         ind mach = case mach ! ind of
   LoopEnd       -> if cell /= 0
                     then stepMachine tape (afterLoopEnd ind mach)
                     else step tape
+  _             -> next tape
   where cell = Z.cursor tape
         step tape' = stepMachine tape' (succ ind) machfd fs
 
