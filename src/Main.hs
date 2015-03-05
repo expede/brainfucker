@@ -2,7 +2,7 @@ module Main where
 
 import qualified Data.List.Zipper    as Z
 import qualified Data.Vector.Generic as V
-import qualified Data.Char           as C
+import Data.Char (chr)
 
 -- Tape for "memory"
 newtype Cell    = Int
@@ -31,42 +31,57 @@ charToCommand c = case c of
   ',' -> OverwriteCell
   '[' -> LoopStart
   ']' -> LoopEnd
-  _   -> Ignore -- Optimize out later by skipping
+  _   -> Ignore
 
 lex :: String -> Machine
-lex = map charToCommand
+lex = filter (/= Ignore) $ map charToCommand
 
-afterLoopStart :: Index -> Machine -> Index
-afterLoopStart ind machine = if machine ! ind == LoopStart
-                               then succ ind
-                               else findLoopStart (pred ind) machine
+loopStartIndex :: Index -> Machine -> Index
+loopStartIndex ind machine = if machine ! ind == LoopStart
+                               then ind
+                               else loopStartIndex (pred ind) machine
 
-afterLoopEnd :: Index -> Machine -> Index
-afterLoopEnd ind machine = if machine ! (pred ind) == LoopEnd
-                             then succ ind
-                             else indexAfterLoop (succ ind) machine
+loopEndIndex :: Index -> Machine -> Index
+loopEndIndex ind machine = if machine ! ind == LoopEnd
+                             then ind
+                             else loopEndIndex (succ ind) machine
 
--- This probably belongs in `main`, for obvious reasons
-stepMachine :: Tape -> Index -> Machine -> (Maybe IO (), Tape)
-stepMachine (Z.Zip _ []) ind mach = step $ Z.insert 0 tape
-stepMachine tape         ind mach = case mach ! ind of
-  TapeLeft      -> step $ Z.left tape
-  TapeRight     -> step $ Z.right tape
+main = do
+  path    <- get
+  machine <- readFile path
+  tape    <- Z.Zip [] [0]
+  stepMachine tape 0 machine
 
-  IncrementCell -> step $ Z.replace (succ cell) tape
-  DecrementCell -> step $ Z.replace (pred cell) tape
+  where stepMachine tape ind mach = case mach ! ind of
+    TapeLeft      -> step $ if beginp cell
+                             then Z.insert 0 tape
+                             else Z.left tape
 
-  PrintCell     -> _ -- $STDOUT (intToDigit cell) and next
-  OverwriteCell -> _ -- ask for input; `putStrLn "Enter a character: "; input <- getLine; next $ Z.replace (ord input) tape`
+    TapeRight     -> step $ if endp cell
+                             then Z.insert 0 tape
+                             else Z.right tape
 
-  LoopStart     -> if cell == 0
-                    then stepMachine tape (afterLoopStart ind mach)
-                    else step tape
-  LoopEnd       -> if cell /= 0
-                    then stepMachine tape (afterLoopEnd ind mach)
-                    else step tape
-  _             -> next tape
-  where cell = Z.cursor tape
-        step tape' = stepMachine tape' (succ ind) mach
+    IncrementCell -> step $ Z.replace (succ cell) tape
+    DecrementCell -> step $ Z.replace (pred cell) tape
 
-main = putStrLn "Hello World"
+    PrintCell     -> do putChar $ chr cell
+                       stepMachine tape nextInd mach
+
+    OverwriteCell -> do putStrLn "Enter a character: "
+                       inChar  <- getChar
+                       newTape <- Z.replace (ord inChar) tape
+                       stepMachine newTape nextInd mach
+
+    LoopStart     -> if cell == 0 -- Loop over; move past end
+                      then stepMachine tape afterLoopEnd mach
+                      else step tape
+
+    LoopEnd       -> if cell == 0 -- Loop over; move past end
+                      then step tape
+                      else stepMachine tape afterLoopStart mach
+
+    where cell = Z.cursor tape
+          nextInd = succ ind
+          step tape' = stepMachine tape' nextInd mach
+          afterLoopStart = succ loopEndIndex ind mach
+          afterLoopEnd   = succ loopStartIndex ind mach
