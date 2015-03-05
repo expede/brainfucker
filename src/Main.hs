@@ -20,6 +20,7 @@ data Command = TapeLeft
              | OverwriteCell
              | LoopStart
              | LoopEnd
+             | Ignore
 
 charToCommand :: Char -> Command
 charToCommand c = case c of
@@ -53,6 +54,8 @@ main = do
   stepMachine tape 0 machine
 
   where stepMachine tape ind mach = case mach ! ind of
+    Ignore        -> step tape
+
     TapeLeft      -> step $ if beginp cell
                              then Z.insert 0 tape
                              else Z.left tape
@@ -65,18 +68,18 @@ main = do
     DecrementCell -> step $ Z.replace (pred cell) tape
 
     PrintCell     -> do putChar $ chr cell
-                       stepMachine tape nextInd mach
+                       step tape
 
     OverwriteCell -> do putStrLn "Enter a character: "
                        inChar  <- getChar
                        newTape <- Z.replace (ord inChar) tape
-                       stepMachine newTape nextInd mach
+                       step newTape
 
-    LoopStart     -> if cell == 0 -- Loop over; move past end
+    LoopStart     -> if cell == 0 -- Loop is over; move past end
                       then stepMachine tape afterLoopEnd mach
                       else step tape
 
-    LoopEnd       -> if cell == 0 -- Loop over; move past end
+    LoopEnd       -> if cell == 0 -- Loop is over; move past end
                       then step tape
                       else stepMachine tape afterLoopStart mach
 
