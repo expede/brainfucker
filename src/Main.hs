@@ -5,8 +5,8 @@ import qualified Data.Vector.Generic as V
 import Data.Char (chr)
 
 -- Tape for "memory"
-newtype Cell    = Int
-newtype Tape    = Zipper Cell
+newtype Cell = Int
+newtype Tape = Zipper Cell
 
 -- Machine for command sequence
 newtype Index   = Int
@@ -38,22 +38,34 @@ lex :: String -> Machine
 lex = filter (/= Ignore) $ map charToCommand
 
 loopStartIndex :: Index -> Machine -> Index
-loopStartIndex ind machine = if machine ! ind == LoopStart
-                               then ind
-                               else loopStartIndex (pred ind) machine
+loopStartIndex startIndex machine = loopStartIndex' startIndex 0
+  where loopStartIndex' index depth = case command of
+          LoopStart -> if depth == 0
+                        then index
+                        else scanLeft $ pred depth
+          LoopEnd   -> scanLeft $ succ depth
+          _         -> scanLeft depth
+          where scanLeft = loopStartIndex' (pred index)
+                command  = machine ! index
 
 loopEndIndex :: Index -> Machine -> Index
-loopEndIndex ind machine = if machine ! ind == LoopEnd
-                             then ind
-                             else loopEndIndex (succ ind) machine
+loopEndIndex startIndex machine = loopEndIndex' startIndex 0
+  where loopEndIndex' index depth = case command of
+          LoopEnd   -> if depth == 0
+                        then index
+                        else scanRight $ pred depth
+          LoopStart -> scanRight $ succ depth
+          _         -> scanRight depth
+          where scanRight = loopEndIndex' (succ index)
+                command   = machine ! index
 
 main = do
   path    <- get
-  machine <- readFile path
+  machine <- lex $ readFile path
   tape    <- Z.Zip [] [0]
   stepMachine tape 0 machine
 
-  where stepMachine tape ind mach = case mach ! ind of
+  where stepMachine tape index mach = case mach ! index of
     Ignore        -> step tape
 
     TapeLeft      -> step $ if beginp cell
@@ -72,8 +84,7 @@ main = do
 
     OverwriteCell -> do putStrLn "Enter a character: "
                        inChar  <- getChar
-                       newTape <- Z.replace (ord inChar) tape
-                       step newTape
+                       step $ Z.replace (ord inChar) tape
 
     LoopStart     -> if cell == 0 -- Loop is over; move past end
                       then stepMachine tape afterLoopEnd mach
@@ -84,7 +95,6 @@ main = do
                       else stepMachine tape afterLoopStart mach
 
     where cell = Z.cursor tape
-          nextInd = succ ind
-          step tape' = stepMachine tape' nextInd mach
-          afterLoopStart = succ loopEndIndex ind mach
-          afterLoopEnd   = succ loopStartIndex ind mach
+          step tape' = stepMachine tape' (succ index) mach
+          afterLoopStart = succ loopEndIndex   index mach
+          afterLoopEnd   = succ loopStartIndex index mach
