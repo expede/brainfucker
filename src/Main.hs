@@ -1,8 +1,8 @@
 module Main where
 
-import qualified Data.List.Zipper    as Z
-import qualified Data.Vector.Generic as V
-import qualified Data.Char           as C
+import qualified Data.List.Zipper as Z
+import qualified Data.Vector      as V
+import qualified Data.Char        as C
 
 -- Tape for "memory"
 type Cell = Int
@@ -10,8 +10,8 @@ type Tape = Z.Zipper Cell
 
 -- Machine for command sequence
 type Index   = Int
--- data Machine = Vector [Command] deriving (Show, Eq)
-type Machine = [Command]
+type Machine = V.Vector Command -- deriving (Show, Eq)
+-- type Machine = [Command]
 
 data Command = TapeLeft
              | TapeRight
@@ -37,7 +37,7 @@ charToCommand c = case c of
   _   -> Ignore
 
 toMachine :: String -> Machine
-toMachine = filter (/= Ignore) . map charToCommand
+toMachine = V.fromList . (filter (/= Ignore)) . (map charToCommand)
 
 loopStartIndex :: Index -> Machine -> Index
 loopStartIndex startIndex machine = loopStartIndex' startIndex 0
@@ -48,7 +48,7 @@ loopStartIndex startIndex machine = loopStartIndex' startIndex 0
           LoopEnd   -> scanLeft $ succ depth
           _         -> scanLeft depth
           where scanLeft = loopStartIndex' (pred index)
-                command  = machine !! index
+                command  = machine V.! index
 
 loopEndIndex :: Index -> Machine -> Index
 loopEndIndex startIndex machine = loopEndIndex' startIndex 0
@@ -59,7 +59,7 @@ loopEndIndex startIndex machine = loopEndIndex' startIndex 0
           LoopStart -> scanRight $ succ depth
           _         -> scanRight depth
           where scanRight = loopEndIndex' (succ index)
-                command   = machine !! index
+                command   = machine V.! index
 
 main = do
   path    <- getLine
@@ -69,7 +69,7 @@ main = do
   return $ stepMachine tape 0 machine
 
   where
-    stepMachine tape index mach = case mach !! index of
+    stepMachine tape index mach = case mach V.! index of
       Ignore        -> step tape
 
       TapeLeft      -> step $ if Z.beginp tape
