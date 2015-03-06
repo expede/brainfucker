@@ -10,8 +10,7 @@ type Tape = Z.Zipper Cell
 
 -- Machine for command sequence
 type Index   = Int
-type Machine = V.Vector Command -- deriving (Show, Eq)
--- type Machine = [Command]
+type Machine = V.Vector Command
 
 data Command = TapeLeft
              | TapeRight
