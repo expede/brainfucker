@@ -1,6 +1,8 @@
 module Brainfucker
        ( interpret
        , runMachine
+       , module Machine
+       , module Tape
        ) where
 
 import           Brainfucker.Machine as Machine
@@ -13,11 +15,26 @@ import qualified Data.List.Zipper    as Z ( Zipper(..)
                                           , right
                                           , replace
                                           )
+
+-- | Convenience function for calling `toMachine` on a string
+--
+-- Examples:
+--
+-- >>> interpret "+++++++++++++++++++++++++++++++++."
+-- !
 interpret :: String -> IO ()
 interpret = runMachine tapeStart . toMachine
 
+-- | Explicit recursive function for interpreting `Machine`s
+--
+-- TODO: convert to a free monad, once the `Machine` type is fixed
+--
+-- Examples:
+--
+-- >>> runMachine tapeStart [Command IncrementCell 50,Command PrintCell 1]
+-- 2
 runMachine :: Z.Zipper Cell -> Machine -> IO ()
-runMachine _             []                 = putStrLn "No program input"
+runMachine _             []                 = error "No program input" -- WOW, THIS LINE IS BROKEN!
 runMachine (Z.Zip [] []) m                  = runMachine tapeStart m
 runMachine (Z.Zip [] t)  m                  = runMachine (Z.Zip [0] t  ) m
 runMachine (Z.Zip h  []) m                  = runMachine (Z.Zip h   [0]) m

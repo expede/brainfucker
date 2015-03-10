@@ -1,5 +1,5 @@
 # brainfucker
-A simple [Brainfuck](http://esolangs.org/wiki/Brainfuck) interpreter in Haskell
+A simple [brainfuck](http://esolangs.org/wiki/Brainfuck) interpreter in Haskell
 
 | Branch | Build Status |
 |--------|--------------|
@@ -13,6 +13,14 @@ cabal install --only-dependencies --enable-tests
 ```
 
 # Tests
+## HSpec
+
 ```bash
 cabal tests
+```
+
+## Doctests
+
+```bash
+cabal doctests
 ```

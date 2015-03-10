@@ -19,9 +19,21 @@ data Lexeme = TapeLeft
             | Ignore
              deriving (Eq, Show)
 
-data Command = Command Lexeme Int
+type Count = Int
+data Command = Command Lexeme Count
              | Loop Machine
+               deriving (Show)
 
+-- | Convert characters to lexemes
+-- Flag any non-brainfuck characters for Ignoring
+--
+-- Examples:
+--
+-- >>> lexChar ','
+-- OverwriteCell
+--
+-- >>> map lexChar "abc[+]#"
+-- [Ignore,Ignore,Ignore,LoopStart,IncrementCell,LoopEnd,Ignore]
 lexChar :: Char -> Lexeme
 lexChar c = case c of
   '<' -> TapeLeft
@@ -34,9 +46,24 @@ lexChar c = case c of
   ']' -> LoopEnd
   _   -> Ignore
 
+-- | Convert string input to a Machine AST
+-- Repeated commands tracked with an Int for efficiency later
+-- ',' and '.' are never collapsed (always return a Count of 1)
+--
+-- Examples:
+--
+-- >>> toMachine "abc[+]#"
+-- [Loop [Command IncrementCell 1]]
+--
+-- >>> toMachine "++."
+-- [Command IncrementCell 2,Command PrintCell 1]
+--
+-- >>> toMachine "..."
+-- [Command PrintCell 1,Command PrintCell 1,Command PrintCell 1]
 toMachine :: String -> Machine
 toMachine = toMachine' . map lexChar
   where toMachine' = commFold []
+        commFold acc []     = acc
         commFold acc (x:xs) = case x of
           LoopStart -> acc ++ [Loop $ toMachine' xs]
           LoopEnd   -> acc
