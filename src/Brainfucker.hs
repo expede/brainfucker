@@ -29,7 +29,7 @@ runMachine t             (Command l n : cs) =
     IncrementCell -> step $ updateCell (+ n)
     DecrementCell -> step $ updateCell (subtract n)
     PrintCell     -> do
-                       return . putChar $ C.chr cell
+                       putChar $ C.chr cell
                        step t
     OverwriteCell -> do
                        putStrLn "Enter a character: "
