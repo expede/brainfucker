@@ -33,18 +33,21 @@ executable brainfucker
   hs-source-dirs:    src
   ghc-options:      -Wall
   build-depends:     base       >= 4.7 && < 5
-                   , ListZipper >= 1.1 && < 2.0
+                   , ListZipper >= 1.2 && < 2.0
                    , brainfucker
 
 test-suite tests
   default-language: Haskell2010
   ghc-options:     -Wall
   type:             exitcode-stdio-1.0
-  main-is:          tests.hs
+  main-is:          Spec.hs
   hs-source-dirs:   tests
+                  , src
+                  , src/Brainfucker
   build-depends:    base
                   , containers
                   , hspec >= 2.0 && < 2.1
+                  , ListZipper >= 1.2 && < 2.0
                   , brainfucker
 
 test-suite doctests
@@ -56,3 +59,4 @@ test-suite doctests
   build-depends:     base
                    , doctest >= 0.9.13 && < 0.10
                    , brainfucker
+                   , ListZipper >= 1.2 && < 2.0

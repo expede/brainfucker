@@ -4,6 +4,7 @@ module Brainfucker.Machine
        , Lexeme(..)
        , Machine
        , toMachine
+       , lexChar
        ) where
 
 type Machine = [Command]
