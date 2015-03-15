@@ -23,7 +23,7 @@ data Lexeme = TapeLeft
 type Count = Int
 data Command = Command Lexeme Count
              | Loop Machine
-               deriving (Show)
+               deriving (Eq, Show)
 
 -- | Convert characters to lexemes
 -- Flag any non-brainfuck characters for Ignoring

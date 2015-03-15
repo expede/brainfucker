@@ -11,7 +11,7 @@ maintainer:   be.zelenka@gmail.com
 category:           Interpreter
 build-type:         Simple
 extra-source-files: README.md
-cabal-version:      >= 1.22.1.1
+cabal-version:      >= 1.22
 
 source-repository head
   type:     git
@@ -34,7 +34,7 @@ executable brainfucker
   ghc-options:      -Wall
   build-depends:     base       >= 4.7 && < 5
                    , ListZipper >= 1.2 && < 2.0
-                   , brainfucker
+                   -- , brainfucker
 
 test-suite tests
   default-language: Haskell2010
@@ -46,17 +46,18 @@ test-suite tests
                   , src/Brainfucker
   build-depends:    base
                   , containers
-                  , hspec >= 2.0 && < 2.1
+                  , hspec      >= 2.0 && < 3.0
+                  , QuickCheck >= 2.7 && < 3.0
                   , ListZipper >= 1.2 && < 2.0
-                  , brainfucker
+                  -- , brainfucker
 
-test-suite doctests
-  type:              exitcode-stdio-1.0
-  default-language:  Haskell2010
-  ghc-options:      -threaded
-  hs-source-dirs:    tests
-  main-is:           doctests.hs
-  build-depends:     base
-                   , doctest >= 0.9.13 && < 0.10
-                   , brainfucker
-                   , ListZipper >= 1.2 && < 2.0
+-- test-suite doctests
+--   type:              exitcode-stdio-1.0
+--   default-language:  Haskell2010
+--   ghc-options:      -threaded
+--   hs-source-dirs:    tests
+--   main-is:           doctests.hs
+--   build-depends:     base
+--                    , doctest >= 0.9.13 && < 0.10
+--                    , brainfucker
+--                    , ListZipper >= 1.2 && < 2.0
