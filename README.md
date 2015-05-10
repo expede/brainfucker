@@ -15,8 +15,10 @@ cabal install --only-dependencies --enable-tests
 ```
 
 # Tests
-## HSpec & DocTest
+## Tasty
+> [Tasty](http://documentup.com/feuerbach/tasty) is a modern testing framework for Haskell.
+> It lets you combine your unit tests, golden tests, QuickCheck/SmallCheck properties, and any other types of tests into a single test suite.
 
 ```bash
-cabal tests
+cabal test
 ```

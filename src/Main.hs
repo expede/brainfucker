@@ -1,10 +1,15 @@
 module Main where
 
-import qualified Brainfucker as B
+import System.IO
+import Data.Brainfucker
+import qualified Data.Text.IO as T
 
-main :: IO ()
-main = do putStrLn "Path to input brainfuck file: "
-          path <- getLine
-          file <- readFile path
-          B.interpret file
-          print (0 :: Int)
+main :: IO Tape
+main = do
+  hSetBuffering stdout NoBuffering
+  hSetBuffering stdin NoBuffering
+
+  putStrLn "Enter your brainfuck program: "
+  text <- T.getLine
+  ast  <- return $ toAST text
+  interpret ast $ return start
