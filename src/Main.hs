@@ -1,15 +1,14 @@
 module Main where
 
 import System.IO
-import Data.Brainfucker
+import Language.Brainfuck
 import qualified Data.Text.IO as T
 
 main :: IO Tape
 main = do
   hSetBuffering stdout NoBuffering
-  hSetBuffering stdin NoBuffering
+  hSetBuffering stdin  NoBuffering
 
   putStrLn "Enter your brainfuck program: "
   text <- T.getLine
-  ast  <- return $ toAST text
-  interpret ast $ return start
+  interpret (toAST text) (return start)
