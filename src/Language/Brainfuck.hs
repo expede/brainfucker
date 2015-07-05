@@ -20,7 +20,7 @@ import Control.Monad.Free (Free(..))
 
 -- | Interpret a Brainfuck `AST`, "running" the virtual machine
 interpret :: AST () -> IO Tape -> IO Tape
-interpret (Pure _)    tape = tape
+interpret (Pure _)  tape = tape
 interpret (Free xs) tape = case xs of
   End        -> tape
   TapeL   ys -> interpret ys $ liftM (<<#) tape
