@@ -28,7 +28,7 @@ module Language.Brainfuck.Tape
   , (#--)
   ) where
 
-import Data.Char (ord, chr)
+import           Data.Char        (chr, ord)
 import qualified Data.List.Zipper as Z
 
 -- | Cell is a single memory cell in the Tape
