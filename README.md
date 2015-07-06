@@ -13,7 +13,7 @@ stack install
 stack test
 ```
 
-# Build Status
+## Build Status
 | Branch | CircleCI |
 |--------|-------------------------|
 | Master | [![Circle CI](https://circleci.com/gh/expede/brainfucker/tree/master.svg?style=svg)](https://circleci.com/gh/expede/brainfucker/tree/master) |

@@ -1,5 +1,5 @@
 {-# OPTIONS_HADDOCK show-extensions, ignore-exports #-}
-{-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+{-# LANGUAGE DeriveFunctor #-}
 
 {-|
 Module      : AST
@@ -38,8 +38,6 @@ data Bfk a = TapeL   a   -- ^ "Move tape left"
              deriving ( Show
                       , Eq
                       , Functor
-                      , Foldable
-                      , Traversable
                       )
 
 -- | Wrap `Bfk` in a Free Monad
@@ -163,6 +161,8 @@ Free (TapeL (Free End))
 
 >>> end >> tapeL >> tapeL >> loopStart
 Free End
+
+prop> (end >> Free End) == Free End
 -}
 end :: AST ()
 end = liftF End

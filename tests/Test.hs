@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
+
 module Main where
 
 import Test.Tasty ( defaultMain
@@ -5,7 +7,11 @@ import Test.Tasty ( defaultMain
                   , TestTree
                   )
 
+import Test.Tasty.SmallCheck as SC
+import Test.SmallCheck.Series
+
 import Language.Brainfuck.Tape.Test
+import Language.Brainfuck.AST
 
 main :: IO ()
 main = defaultMain tests
