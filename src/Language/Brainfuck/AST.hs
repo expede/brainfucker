@@ -1,5 +1,5 @@
 {-# OPTIONS_HADDOCK show-extensions, ignore-exports #-}
-{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveFunctor, DeriveGeneric #-}
 
 {-|
 Module      : AST
@@ -21,6 +21,7 @@ module Language.Brainfuck.AST ( AST
                               , subtree
                               , suspend
                               ) where
+import GHC.Generics
 
 import Control.Monad.Free ( Free(..)
                           , liftF
@@ -38,6 +39,7 @@ data Bfk a = TapeL   a   -- ^ "Move tape left"
              deriving ( Show
                       , Eq
                       , Functor
+                      , Generic
                       )
 
 -- | Wrap `Bfk` in a Free Monad

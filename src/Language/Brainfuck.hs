@@ -1,4 +1,5 @@
 {-# OPTIONS_HADDOCK show-extensions, ignore-exports #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 {-|
 Module      : Brainfuck interpreter
@@ -11,6 +12,7 @@ module Language.Brainfuck ( Tape
                           , start
                           ) where
 
+import Data.Text (Text)
 import Language.Brainfuck.Tape
 import Language.Brainfuck.Lex (toAST)
 import Language.Brainfuck.AST (AST, Bfk(..))
@@ -18,7 +20,15 @@ import Language.Brainfuck.AST (AST, Bfk(..))
 import Control.Monad      (liftM)
 import Control.Monad.Free (Free(..))
 
+-- $setup
+-- >>> :set -XOverloadedStrings
+-- >>> let helloWorld = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++." :: Text
+-- >>> let hd = "++++>>>+++" :: Text
+
 -- | Interpret a Brainfuck `AST`, "running" the virtual machine
+--
+-- >>> interpret (toAST hd) (return start)
+-- Hello World!
 interpret :: AST () -> IO Tape -> IO Tape
 interpret (Pure _)  tape = tape
 interpret (Free xs) tape = case xs of
@@ -34,7 +44,7 @@ interpret (Free xs) tape = case xs of
   SetCell ys -> do
     putStrLn "Insert character to overwrite: "
     newChar <- getChar
-    let newTape = liftM (>#< newChar) tape
+    let newTape = liftM (newChar >#<) tape
     interpret ys newTape
   Loop zs ys -> do
     t <- tape

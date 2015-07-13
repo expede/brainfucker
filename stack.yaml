@@ -48,4 +48,7 @@ extra-deps:
 - ansi-wl-pprint-0.6.7.2
 - parsec-3.1.9
 - regex-base-0.93.2
+- tasty-quickcheck-0.8.3.2
+- checkers-0.4.3
+- props-0.1.2
 resolver: ghc-7.10

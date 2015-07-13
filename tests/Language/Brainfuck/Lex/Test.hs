@@ -1,6 +1,6 @@
-module Language.Brainfuck.Tape.Test (tapeSuite) where
+module Language.Brainfuck.Lex.Test (lexSuite) where
 
-import Language.Brainfuck.Tape
+import Language.Brainfuck.Lex
 import qualified Data.List.Zipper as Z
 
 import Test.Tasty ( TestTree
@@ -24,8 +24,8 @@ import Test.Properties ( idempotent
 -- import qualified Test.QuickCheck.Utils     as QU
 -- import qualified Test.QuickCheck.Checkers  as Ch
 
-tapeSuite :: TestTree
-tapeSuite = testGroup "Tape"
+lexSuite :: TestTree
+lexSuite = testGroup "Tape"
   [ testProperty "`set` is idempotent" $
       idempotent . set
   , testProperty "`left` and `right` commute for all tapes" $

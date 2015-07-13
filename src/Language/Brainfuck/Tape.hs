@@ -28,31 +28,28 @@ module Language.Brainfuck.Tape
   , (#--)
   ) where
 
-import           Data.Char        (chr, ord)
-import qualified Data.List.Zipper as Z
+import Data.List.Zipper ( Zipper(..)
+                        , cursor
+                        , replace
+                        , left
+                        , right
+                        )
+
+import Data.Char ( chr
+                 , ord
+                 )
 
 -- | Cell is a single memory cell in the Tape
 type Cell = Int
 
 -- | A collection of Cells is a Tape, which emulates "memory"
-type Tape = Z.Zipper Cell
+type Tape = Zipper Cell
 
 -- $setup
--- >>> let tape0 = (Z.Zip [] [0]) :: Tape
--- >>> let tape1 = (Z.Zip [] [1]) :: Tape
--- >>> let tape9 = (Z.Zip [4,3,2,1,0] [5,6,7,8,9]) :: Tape
--- >>> let tapeX = (Z.Zip [] [88]) :: Tape
-
-{- | Get the current tape's head value
-
->>> cursor start
-0
-
->>> cursor tape1
-1
--}
-cursor :: Tape -> Cell
-cursor = Z.cursor
+-- >>> let tape0 = (Zip [] [0]) :: Tape
+-- >>> let tape1 = (Zip [] [1]) :: Tape
+-- >>> let tape9 = (Zip [4,3,2,1,0] [5,6,7,8,9]) :: Tape
+-- >>> let tapeX = (Zip [] [88]) :: Tape
 
 {- | Alternate syntax for `cursor`
 
@@ -90,31 +87,31 @@ get = chr . cursor
 {- | Replace the rw-head of the tape with another value.
 Since this version of Brainfuck is ASCII, it mods at character value 128 ('\128')
 
->>> set tape0 'X'
+>>> set 'X' tape0
 Zip [] [88]
 
->>> set tape0 '\216'
+>>> set '\216' tape0
 Zip [] [88]
 
->>> get $ set tape0 '\216'
+>>> get $ set '\216' tape0
 'X'
 -}
-set :: Tape -> Char -> Tape
-set tape char = Z.replace newInt tape
+set :: Char -> Tape -> Tape
+set char tape = replace newInt tape
   where newInt = ord char `mod` 128
 
 {- | Alterante syntax for `set`
 
->>> (>#<) tape0 'X'
+>>> (>#<) 'X' tape0
 Zip [] [88]
 
->>> (>#<) tape0 '\216'
+>>> (>#<) '\216' tape0
 Zip [] [88]
 
->>> (<#>) $ (>#<) tape0 '\216'
+>>> (<#>) $ (>#<) '\216' tape0
 'X'
 -}
-(>#<) :: Tape -> Char -> Tape
+(>#<) :: Char -> Tape -> Tape
 (>#<) = set
 
 {-| Print the tape's head
@@ -145,7 +142,7 @@ X
 0
 -}
 start :: Tape
-start = Z.Zip (repeat 0) (repeat 0)
+start = Zip (repeat 0) (repeat 0)
 
 {- | Alternate syntax for `start`
 
@@ -155,14 +152,6 @@ start = Z.Zip (repeat 0) (repeat 0)
 (###) :: Tape
 (###) = start
 
-{- | Move tape head left one position
-
->>> left tape9
-Zip [3,2,1,0] [4,5,6,7,8,9]
--}
-left :: Tape -> Tape
-left = Z.left
-
 {- | Alternate syntax for `left`
 
 >>> (<<#) tape9
@@ -170,14 +159,6 @@ Zip [3,2,1,0] [4,5,6,7,8,9]
 -}
 (<<#) :: Tape -> Tape
 (<<#) = left
-
-{- | Move tape head right one position
-
->>> right tape9
-Zip [5,4,3,2,1,0] [6,7,8,9]
--}
-right :: Tape -> Tape
-right = Z.right
 
 {- | Alternate syntax for `right`
 
@@ -192,19 +173,19 @@ Zip [5,4,3,2,1,0] [6,7,8,9]
 >>> inc tape0
 Zip [] [1]
 
->>> inc $ Z.Zip [] [127]
+>>> inc $ Zip [] [127]
 Zip [] [0]
 -}
 inc :: Tape -> Tape
-inc   (Z.Zip _ []   ) = error "not possible"
-inc t@(Z.Zip _ (c:_)) = Z.replace (succ c `mod` 128) t
+inc   (Zip _ []   ) = error "not possible"
+inc t@(Zip _ (c:_)) = replace (succ c `mod` 128) t
 
 {- | Alternate syntax for `inc`
 
 >>> (#++) tape0
 Zip [] [1]
 
->>> (#++) $ Z.Zip [] [127]
+>>> (#++) $ Zip [] [127]
 Zip [] [0]
 -}
 (#++) :: Tape -> Tape
@@ -219,8 +200,8 @@ Zip [] [0]
 Zip [] [127]
 -}
 dec :: Tape -> Tape
-dec   (Z.Zip _ []   ) = error "not possible"
-dec t@(Z.Zip _ (c:_)) = Z.replace (pred c `mod` 128) t
+dec   (Zip _ []   ) = error "not possible"
+dec t@(Zip _ (c:_)) = replace (pred c `mod` 128) t
 
 {- | Alternate syntax for `dec`
 
