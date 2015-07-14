@@ -10,15 +10,13 @@ module Language.Brainfuck ( Tape
                           , interpret
                           , toAST
                           , start
+                          , (###)
                           ) where
 
-import Data.Text (Text)
 import Language.Brainfuck.Tape
 import Language.Brainfuck.Lex (toAST)
 import Language.Brainfuck.AST (AST, Bfk(..))
-
-import Control.Monad      (liftM)
-import Control.Monad.Free (Free(..))
+import Control.Monad.Free     (Free(..))
 
 -- $setup
 -- >>> :set -XOverloadedStrings
@@ -27,27 +25,21 @@ import Control.Monad.Free (Free(..))
 
 -- | Interpret a Brainfuck `AST`, "running" the virtual machine
 --
--- >>> interpret (toAST hd) (return start)
+-- >>> (do { interpret (toAST hd) (return start) }) :: IO Tape
 -- Hello World!
-interpret :: AST () -> IO Tape -> IO Tape
-interpret (Pure _)  tape = tape
-interpret (Free xs) tape = case xs of
-  End        -> tape
-  TapeL   ys -> interpret ys $ liftM (<<#) tape
-  TapeR   ys -> interpret ys $ liftM (#>>) tape
-  IncCell ys -> interpret ys $ liftM (#++) tape
-  DecCell ys -> interpret ys $ liftM (#--) tape
-  GetCell ys -> do
-    t <- tape
-    (^#^) t
-    interpret ys (return t)
+interpret :: AST () -> Tape -> IO ()
+interpret     (Pure _)  _    = return ()
+interpret ast@(Free xs) tape = case xs of
+  End        -> return ()
+  TapeL   ys -> interpret ys $ (<<#) tape
+  TapeR   ys -> interpret ys $ (#>>) tape
+  IncCell ys -> interpret ys $ (#++) tape
+  DecCell ys -> interpret ys $ (#--) tape
+  GetCell ys -> (^#^) tape >> interpret ys tape
   SetCell ys -> do
     putStrLn "Insert character to overwrite: "
     newChar <- getChar
-    let newTape = liftM (newChar >#<) tape
-    interpret ys newTape
-  Loop zs ys -> do
-    t <- tape
-    case cursor t of
-      0 -> interpret ys (return t)
-      _ -> interpret (Free xs) (interpret zs (return t))
+    interpret ys $ newChar >#< tape
+  Loop zs ys -> case cursor tape of
+    0 -> interpret ys tape
+    _ -> interpret (zs >> ast) tape
