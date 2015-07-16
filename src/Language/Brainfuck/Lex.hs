@@ -26,8 +26,16 @@ import Data.Text (Text)
 import Data.Attoparsec.Internal.Types (Parser)
 import Data.Attoparsec.Text ( char
                             , anyChar
+                            , notChar
+                            , takeTill
+                            , manyTill
+                            , manyTill'
                             , many1
+                            , many'
+                            , skip
                             , parseOnly
+                            , option
+                            , endOfInput
                             )
 
 -- | Lexer is the expected parser type for the Brainfuck AST
@@ -116,55 +124,65 @@ isSetCell = ',' ==> setCell
 
 {- | Recursively lex "[x]" as `Loop (x) ()`
 
+>>> parseOnly inLoop ("[]" :: Text)
+Right (Free (Loop (Free End) (Pure ())))
+
 >>> parseOnly inLoop ("[.]" :: Text)
 Right (Free (Loop (Free (GetCell (Free End))) (Pure ())))
+
+>>> parseOnly inLoop ("[[.]]" :: Text)
+Right (Free (Loop (Free (Loop (Free (GetCell (Free End))) (Free End))) (Pure ())))
+
+>>> parseOnly inLoop ("[.[.]]" :: Text)
+Right (Free (Loop (Free (GetCell (Free (Loop (Free (GetCell (Free End))) (Free End))))) (Pure ())))
+
+>>> parseOnly inLoop ("[[.].]" :: Text)
+Right (Free (Loop (Free (Loop (Free (GetCell (Free End))) (Free (GetCell (Free End))))) (Pure ())))
 
 >>> parseOnly inLoop ("[.[+,[-]]]" :: Text)
 Right (Free (Loop (Free (GetCell (Free (Loop (Free (IncCell (Free (SetCell (Free (Loop (Free (DecCell (Free End))) (Free End))))))) (Free End))))) (Pure ())))
 
->>> parseOnly inLoop ("[]" :: Text)
-Left "not enough input"
+>>> parseOnly inLoop ("[+[-?]]" :: Text)
+Right (Free (Loop (Free (IncCell (Free (Loop (Free (DecCell (Free End))) (Free End))))) (Pure ())))
+
+>>> parseOnly inLoop ("[+[-].]" :: Text)
+Right (Free (Loop (Free (IncCell (Free (Loop (Free (DecCell (Free End))) (Free (GetCell (Free End))))))) (Pure ())))
 
 >>> parseOnly isSetCell badText
 Left "',': Failed reading: satisfy"
-
->>> parseOnly inLoop ("[+[-?]]" :: Text)
-Left "']': Failed reading: satisfy"
 -}
 inLoop :: Lexer
-inLoop = do
-   _     <- char '['
-   nodes <- many1 node
-   _     <- char ']'
-   return . subtree $ sequence_ nodes
+inLoop = char '[' *> do
+  inside <- node `manyTill` char ']'
+  return . subtree $ sequence_ inside
 
 {- | Skip past all non-brainfuck characters.
 Delegates first brainfuck match to the correct parser.
 If no match, then skip and move to the next character.
 
 >>> parseOnly ignore badText
-Left "not enough input"
+Right (Pure ())
 
 >>> parseOnly ignore ("++" :: Text)
-Right (Free (IncCell (Pure ())))
+Right (Pure ())
 
 >>> parseOnly ignore ("?__+,__???07821900??+??8980____?????" :: Text)
-Right (Free (IncCell (Pure ())))
+Right (Pure ())
 -}
 ignore :: Lexer
-ignore = anyChar *> node
+ignore = anyChar *> return suspend
 
 {- | First-match lexing tree.
 Tries all possibilities before loops or ignored characters.
 
 >>> parseOnly node badText
-Left "not enough input"
+Right (Pure ())
 
 >>> parseOnly ignore ("++" :: Text)
-Right (Free (IncCell (Pure ())))
+Right (Pure ())
 
 >>> parseOnly ignore ("?__+,__???07821900??+??8980____?????" :: Text)
-Right (Free (IncCell (Pure ())))
+Right (Pure ())
 -}
 node :: Lexer
 node =  isTapeL
@@ -180,19 +198,22 @@ node =  isTapeL
 Throws a runtime error with message if the input text is malfomed or unparseable.
 
 >>> toAST ("+-" :: Text)
-Free (IncCell (Free (DecCell (Free End))))
+Free (IncCell (Free (DecCell (Pure ()))))
 
 >>> toAST ("[[+]]" :: Text)
-Free (Loop (Free (Loop (Free (IncCell (Free End))) (Free End))) (Free End))
+Free (Loop (Free (Loop (Free (IncCell (Free End))) (Free End))) (Pure ()))
 
 >>> toAST ("[[+]-]" :: Text)
-Free (Loop (Free (IncCell (Free (DecCell (Free End))))) (Free End))
+Free (Loop (Free (Loop (Free (IncCell (Free End))) (Free (DecCell (Free End))))) (Pure ()))
+
+>>> toAST (",[[+]-]" :: Text)
+Free (SetCell (Free (Loop (Free (Loop (Free (IncCell (Free End))) (Free (DecCell (Free End))))) (Pure ()))))
 
 >>> toAST badText
-*** Exception: not enough input
+Pure ()
 -}
 toAST :: Text -> AST ()
 toAST text = case parsed of
-  Right result -> sequence_ result >> end
+  Right result -> sequence_ result
   Left  err    -> error err
   where parsed = parseOnly (many1 node) text
