@@ -24,8 +24,8 @@ instance Arbitrary (Bfk a)
 
 astSuite :: TestTree
 astSuite = testGroup "Tape"
-  [ testProperty "`set` is idempotent" $
-      (end >> end >> tapeL) == (end >> tapeL)
+  [ -- testProperty "`set` is idempotent" $
+      -- (end >> end >> tapeL) == (end >> tapeL)
   -- , testProperty "`left` and `right` commute for all tapes" $
   --     forAll tapes $ commutes left right
   -- , testProperty "`left` and `right` invert for all tapes" $

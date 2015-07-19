@@ -119,34 +119,34 @@ isSetCell = ',' ==> setCell
 {- | Recursively lex "[x]" as `Loop (x) ()`
 
 >>> parseOnly inLoop ("[]" :: Text)
-Right (Free (Loop (Free End) (Pure ())))
+Right (Free (Loop (Pure ()) (Pure ())))
 
 >>> parseOnly inLoop ("[.]" :: Text)
-Right (Free (Loop (Free (GetCell (Free End))) (Pure ())))
+Right (Free (Loop (Free (GetCell (Pure ()))) (Pure ())))
 
 >>> parseOnly inLoop ("[[.]]" :: Text)
-Right (Free (Loop (Free (Loop (Free (GetCell (Free End))) (Free End))) (Pure ())))
+Right (Free (Loop (Free (Loop (Free (GetCell (Pure ()))) (Pure ()))) (Pure ())))
 
 >>> parseOnly inLoop ("[.[.]]" :: Text)
-Right (Free (Loop (Free (GetCell (Free (Loop (Free (GetCell (Free End))) (Free End))))) (Pure ())))
+Right (Free (Loop (Free (GetCell (Free (Loop (Free (GetCell (Pure ()))) (Pure ()))))) (Pure ())))
 
 >>> parseOnly inLoop ("[[.].]" :: Text)
-Right (Free (Loop (Free (Loop (Free (GetCell (Free End))) (Free (GetCell (Free End))))) (Pure ())))
+Right (Free (Loop (Free (Loop (Free (GetCell (Pure ()))) (Free (GetCell (Pure ()))))) (Pure ())))
 
 >>> parseOnly inLoop ("[.[+,[-]]]" :: Text)
-Right (Free (Loop (Free (GetCell (Free (Loop (Free (IncCell (Free (SetCell (Free (Loop (Free (DecCell (Free End))) (Free End))))))) (Free End))))) (Pure ())))
+Right (Free (Loop (Free (GetCell (Free (Loop (Free (IncCell (Free (SetCell (Free (Loop (Free (DecCell (Pure ()))) (Pure ()))))))) (Pure ()))))) (Pure ())))
 
 >>> parseOnly inLoop ("[+[-?]]" :: Text)
-Right (Free (Loop (Free (IncCell (Free (Loop (Free (DecCell (Free End))) (Free End))))) (Pure ())))
+Right (Free (Loop (Free (IncCell (Free (Loop (Free (DecCell (Pure ()))) (Pure ()))))) (Pure ())))
 
 >>> parseOnly inLoop ("[+[-].]" :: Text)
-Right (Free (Loop (Free (IncCell (Free (Loop (Free (DecCell (Free End))) (Free (GetCell (Free End))))))) (Pure ())))
+Right (Free (Loop (Free (IncCell (Free (Loop (Free (DecCell (Pure ()))) (Free (GetCell (Pure ()))))))) (Pure ())))
 
 >>> parseOnly isSetCell badText
 Left "',': Failed reading: satisfy"
 -}
 inLoop :: Lexer
-inLoop = char '[' *> node `manyTill'` char ']' >>= \x -> return $ subtree $ sequence_ x-- do
+inLoop = char '[' *> node `manyTill'` char ']' >>= \x -> return . subtree $ sequence' x-- do
 
 {- | Skip past all non-brainfuck characters.
 Delegates first brainfuck match to the correct parser.
@@ -193,19 +193,19 @@ Throws a runtime error with message if the input text is malfomed or unparseable
 Free (IncCell (Free (DecCell (Pure ()))))
 
 >>> toAST ("[[+]]" :: Text)
-Free (Loop (Free (Loop (Free (IncCell (Free End))) (Free End))) (Pure ()))
+Free (Loop (Free (Loop (Free (IncCell (Pure ()))) (Pure ()))) (Pure ()))
 
 >>> toAST ("[[+]-]" :: Text)
-Free (Loop (Free (Loop (Free (IncCell (Free End))) (Free (DecCell (Free End))))) (Pure ()))
+Free (Loop (Free (Loop (Free (IncCell (Pure ()))) (Free (DecCell (Pure ()))))) (Pure ()))
 
 >>> toAST (",[[+]-]" :: Text)
-Free (SetCell (Free (Loop (Free (Loop (Free (IncCell (Free End))) (Free (DecCell (Free End))))) (Pure ()))))
+Free (SetCell (Free (Loop (Free (Loop (Free (IncCell (Pure ()))) (Free (DecCell (Pure ()))))) (Pure ()))))
 
 >>> toAST badText
 Pure ()
 -}
 toAST :: Text -> AST ()
 toAST text = case parsed of
-  Right result -> sequence_ result
+  Right result -> sequence' result
   Left  err    -> error err
   where parsed = parseOnly (many' node) text

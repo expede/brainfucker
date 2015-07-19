@@ -15,7 +15,7 @@ module Language.Brainfuck ( Tape
 
 import Language.Brainfuck.Tape
 import Language.Brainfuck.Lex (toAST)
-import Language.Brainfuck.AST (AST, Bfk(..), unend)
+import Language.Brainfuck.AST (AST, Bfk(..), (.>))
 import Control.Monad.Free     (Free(..))
 
 -- $setup
@@ -31,7 +31,6 @@ import Control.Monad.Free     (Free(..))
 interpret :: AST () -> Tape -> IO ()
 interpret     (Pure _)  _    = return ()
 interpret ast@(Free xs) tape = case xs of
-  End        -> return ()
   TapeL   ys -> interpret ys $ (<<#) tape
   TapeR   ys -> interpret ys $ (#>>) tape
   IncCell ys -> interpret ys $ (#++) tape
@@ -43,4 +42,4 @@ interpret ast@(Free xs) tape = case xs of
     interpret ys $ newChar >#< tape
   Loop zs ys -> case (#) tape of
     0 -> interpret ys tape
-    _ -> interpret (unend zs >> ast) tape
+    _ -> interpret (zs .> ast) tape
