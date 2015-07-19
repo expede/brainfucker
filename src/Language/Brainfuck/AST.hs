@@ -20,6 +20,7 @@ module Language.Brainfuck.AST ( AST
                               , end
                               , subtree
                               , suspend
+                              , unend
                               ) where
 import GHC.Generics
 
@@ -28,7 +29,7 @@ import Control.Monad.Free ( Free(..)
                           )
 
 -- | Description of all Brainfuck commands. `a` is the nested remainder of the tree.
-data Bfk a = TapeL   a   -- ^ "Move tape left"
+data Bfk a  = TapeL   a   -- ^ "Move tape left"
            | TapeR   a   -- ^ "Move tape right"
            | IncCell a   -- ^ "Increment cell (tape head) by one"
            | DecCell a   -- ^ "Decrement cell (tape head) by one"
@@ -148,7 +149,20 @@ loopStart = liftF $ Loop () ()
 Free (Loop (Free (TapeL (Free End))) (Pure ()))
 -}
 subtree :: AST () -> AST ()
+-- subtree ast = Free $ Loop (ast >> end) (Pure ())
 subtree ast = Free $ Loop (ast >> end) (Pure ())
+
+unend :: AST () -> AST ()
+unend (Free End) = Pure ()
+unend ast = case ast of
+  Free (TapeL xs) -> tapeL >> unend xs
+  Free (TapeR xs) -> tapeR >> unend xs
+  Free (IncCell xs) -> incCell >> unend xs
+  Free (DecCell xs) -> decCell >> unend xs
+  Free (GetCell xs) -> getCell >> unend xs
+  Free (SetCell xs) -> setCell >> unend xs
+  Free (Loop xs ys) -> Free (Loop xs (unend ys))
+
 
 {- | Finish a branch of a #Bfk# tree. Also, `end >> _ = end`.
 

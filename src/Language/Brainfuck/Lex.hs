@@ -26,16 +26,10 @@ import Data.Text (Text)
 import Data.Attoparsec.Internal.Types (Parser)
 import Data.Attoparsec.Text ( char
                             , anyChar
-                            , notChar
-                            , takeTill
-                            , manyTill
                             , manyTill'
-                            , many1
                             , many'
-                            , skip
                             , parseOnly
-                            , option
-                            , endOfInput
+                            , skip
                             )
 
 -- | Lexer is the expected parser type for the Brainfuck AST
@@ -152,9 +146,7 @@ Right (Free (Loop (Free (IncCell (Free (Loop (Free (DecCell (Free End))) (Free (
 Left "',': Failed reading: satisfy"
 -}
 inLoop :: Lexer
-inLoop = char '[' *> do
-  inside <- node `manyTill` char ']'
-  return . subtree $ sequence_ inside
+inLoop = char '[' *> node `manyTill'` char ']' >>= \x -> return $ subtree $ sequence_ x-- do
 
 {- | Skip past all non-brainfuck characters.
 Delegates first brainfuck match to the correct parser.
@@ -216,4 +208,4 @@ toAST :: Text -> AST ()
 toAST text = case parsed of
   Right result -> sequence_ result
   Left  err    -> error err
-  where parsed = parseOnly (many1 node) text
+  where parsed = parseOnly (many' node) text

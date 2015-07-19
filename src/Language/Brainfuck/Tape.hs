@@ -90,25 +90,24 @@ Since this version of Brainfuck is ASCII, it mods at character value 128 ('\128'
 >>> set 'X' tape0
 Zip [] [88]
 
->>> set '\216' tape0
+>>> set '\343' tape0
 Zip [] [88]
 
->>> get $ set '\216' tape0
+>>> get $ set '\343' tape0
 'X'
 -}
 set :: Char -> Tape -> Tape
-set char tape = replace newInt tape
-  where newInt = ord char `mod` 128
+set char = replace $ ord char `mod` 255
 
 {- | Alterante syntax for `set`
 
 >>> (>#<) 'X' tape0
 Zip [] [88]
 
->>> (>#<) '\216' tape0
+>>> (>#<) '\343' tape0
 Zip [] [88]
 
->>> (<#>) $ (>#<) '\216' tape0
+>>> (<#>) $ (>#<) '\343' tape0
 'X'
 -}
 (>#<) :: Char -> Tape -> Tape
@@ -168,40 +167,40 @@ Zip [5,4,3,2,1,0] [6,7,8,9]
 (#>>) :: Tape -> Tape
 (#>>) = right
 
-{- | Increment the cell at the tape head, mod 128 (ASCII)
+{- | Increment the cell at the tape head, mod 255 (ASCII)
 
 >>> inc tape0
 Zip [] [1]
 
->>> inc $ Zip [] [127]
+>>> inc $ Zip [] [254]
 Zip [] [0]
 -}
 inc :: Tape -> Tape
 inc   (Zip _ []   ) = error "not possible"
-inc t@(Zip _ (c:_)) = replace (succ c `mod` 128) t
+inc t@(Zip _ (c:_)) = replace (succ c `mod` 255) t
 
 {- | Alternate syntax for `inc`
 
 >>> (#++) tape0
 Zip [] [1]
 
->>> (#++) $ Zip [] [127]
+>>> (#++) $ Zip [] [254]
 Zip [] [0]
 -}
 (#++) :: Tape -> Tape
 (#++) = inc
 
-{- | Decrement the cell at the tape head, mod 128 (ASCII)
+{- | Decrement the cell at the tape head, mod 256 (ASCII)
 
 >>> dec tape1
 Zip [] [0]
 
 >>> dec tape0
-Zip [] [127]
+Zip [] [254]
 -}
 dec :: Tape -> Tape
 dec   (Zip _ []   ) = error "not possible"
-dec t@(Zip _ (c:_)) = replace (pred c `mod` 128) t
+dec t@(Zip _ (c:_)) = replace (pred c `mod` 255) t
 
 {- | Alternate syntax for `dec`
 
@@ -209,7 +208,7 @@ dec t@(Zip _ (c:_)) = replace (pred c `mod` 128) t
 Zip [] [0]
 
 >>> (#--) tape0
-Zip [] [127]
+Zip [] [254]
 -}
 (#--) :: Tape -> Tape
 (#--) = dec
