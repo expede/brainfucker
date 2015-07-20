@@ -127,7 +127,7 @@ Free (Loop (Free (TapeL (Pure ()))) (Pure ()))
 subtree :: AST () -> AST ()
 subtree ast = Free $ Loop ast (Pure ())
 
--- | "Right compose": compose the main spine of an AST (no iner subtrees)
+-- | "Right compose": compose the main spine of an AST (no inner subtrees)
 --
 -- >>> tapeL .> tapeR
 -- Free (TapeL (Free (TapeR (Pure ()))))
