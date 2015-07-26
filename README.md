@@ -1,5 +1,5 @@
 # brainfucker
-A simple [brainfuck](http://esolangs.org/wiki/Brainfuck) interpreter (and library) in Haskell.
+A simple [brainfuck](http://esolangs.org/wiki/Brainfuck) interpreter (and library).
 
 # Installation
 
