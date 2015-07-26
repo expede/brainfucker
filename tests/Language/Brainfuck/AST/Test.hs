@@ -1,4 +1,4 @@
-{-# LANAGUGE TypeSynonymInstances #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 module Language.Brainfuck.AST.Test (astSuite) where
 

@@ -10,16 +10,16 @@ import qualified Test.Tasty.QuickCheck as QC
 import Test.Tasty.SmallCheck as SC
 import Test.SmallCheck.Series
 
-import Language.Brainfuck.Tape.Test
-import Language.Brainfuck.AST.Test
+import Language.Brainfuck.Interpret.Test
 
 main :: IO ()
 main = defaultMain tests
 
 -- tests :: TestTree
 tests = localOption (QC.QuickCheckTests 9999) $ testGroup "All Tests"
-          [ tapeSuite
+          [
+            -- tapeSuite
           -- , lexSuite
-          , astSuite
-          -- , interpreterSuite
+          -- , astSuite
+          interpretSuite
           ]

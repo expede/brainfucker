@@ -23,6 +23,7 @@ library
                    , Language.Brainfuck.AST
                    , Language.Brainfuck.Lex
                    , Language.Brainfuck.Tape
+                   , Language.Brainfuck.Interpret
   build-depends:     base       >= 4.7  && < 5
                    , ListZipper >= 1.1  && < 2.0
                    , attoparsec >= 0.13 && < 1.0
@@ -57,6 +58,7 @@ test-suite test
                   , smallcheck       >= 1.1 && < 2.0
                   , checkers         >= 0.4 && < 1.0
                   , props            >= 0.1 && < 1.0
+                  , text             >= 1.2 && < 2.0
                   , ListZipper       >= 1.1 && < 2.0
                   , brainfucker
 
