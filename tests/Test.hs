@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
-
 module Main where
 
 import Test.Tasty ( defaultMain
@@ -23,4 +21,5 @@ tests = localOption (QC.QuickCheckTests 9999) $ testGroup "All Tests"
           [ tapeSuite
           -- , lexSuite
           , astSuite
+          -- , interpreterSuite
           ]

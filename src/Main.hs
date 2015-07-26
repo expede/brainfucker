@@ -11,4 +11,4 @@ main = do
 
   putStrLn "Enter your brainfuck program: "
   text <- T.getLine
-  interpret (toAST text) (###)
+  interpret text
