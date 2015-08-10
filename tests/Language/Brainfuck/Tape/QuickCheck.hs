@@ -1,32 +1,35 @@
+{-# LANGUAGE FlexibleInstances #-}
 module Language.Brainfuck.Tape.QuickCheck (tests) where
 
 import Language.Brainfuck.Tape
-import qualified Data.List.Zipper as Z
+import Data.List.Zipper (Zipper(Zip))
 
-import Test.Tasty      (TestTree, testGroup)
-import Test.Properties (idempotent, inverts)
-import Test.Tasty.QuickCheck ( Gen
-                             , testProperty
-                             , forAll
-                             , suchThat
-                             , arbitrary
-                             )
+import Test.Tasty (TestTree, testGroup)
+import Test.Tasty.QuickCheck hiding (infiniteList)
+import Test.QuickCheck.Instances.List (infiniteList)
 
 tests :: TestTree
 tests = testGroup "Tape"
-  [ testProperty "(>#<) is idempotent" $ idempotent . (>#<)
-  , testProperty "(#++) inverts (#--)" $ prop_inverts (#++) (#--)
+  [ testProperty "(>#<) is idempotent" $ prop_idempotent . (>#<)
+  , testProperty "(#++) inverts (#--)" $ prop_commute (#++) (#--)
   , testProperty "(#>>) inverts (<<#)" $ prop_inverts (#>>) (<<#)
   ]
 
-prop_commute :: Eq a => (a -> a) -> (a -> a) -> a -> Bool
-prop_commute f g a = (f . g) a == (g . f) a
+prop_idempotent :: (Tape -> Tape) -> Tape -> Bool
+prop_idempotent f a = (middle . f) a == (middle . f . f) a
 
--- inverts :: Eq a => (a -> a) -> (a -> a) -> a -> Bool
--- inverts f g a = (f . g) a == a
+prop_commute :: (Tape -> Tape) -> (Tape -> Tape) -> Tape -> Bool
+prop_commute f g a = (middle . f . g) a == (middle . g . f) a
 
-prop_inverts f g = forAll tapes $ f `inverts` g
+prop_inverts :: (Tape -> Tape) -> (Tape -> Tape) -> Tape -> Bool
+prop_inverts f g z = (middle . f . g) z == middle z
 
-tapes :: Gen Tape
-tapes = arbitrary `suchThat` minSubTape
-  where minSubTape (Z.Zip a b) = length a > 2 && length b > 2
+middle :: Tape -> [Cell]
+middle (Zip as bs) = take 100 as ++ take 100 bs
+
+instance {-# OVERLAPS #-} Arbitrary Tape where
+  arbitrary = do
+    list1 <- genListCell
+    list2 <- genListCell
+    return $ Zip list1 list2
+    where genListCell = infiniteList $ choose (0, 255)
