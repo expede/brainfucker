@@ -1,5 +1,5 @@
 name:     brainfucker
-version:  0.6.1.0
+version:  0.8.0.0
 synopsis: A simple Brainfuck interpreter
 homepage: https://github.com/expede/brainfucker
 
@@ -22,6 +22,7 @@ library
   exposed-modules:   Language.Brainfuck
                    , Language.Brainfuck.AST
                    , Language.Brainfuck.Lex
+                   , Language.Brainfuck.Cell
                    , Language.Brainfuck.Tape
                    , Language.Brainfuck.Interpret
   build-depends:     base       >= 4.7  && < 5

@@ -1,4 +1,5 @@
 {-# OPTIONS_HADDOCK show-extensions, ignore-exports #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 {-|
 Module      : Tape
@@ -7,7 +8,10 @@ Description : Tape (ie: memory) model, movement and operation on the tape head
 
 module Language.Brainfuck.Tape
   ( Cell
-  , Tape
+  , toCell
+  , unCell
+  , Tape(unTape)
+  , toTape
   , start
   , (###)
   , cursor
@@ -28,28 +32,37 @@ module Language.Brainfuck.Tape
   , (#--)
   ) where
 
-import Data.List.Zipper ( Zipper(..)
-                        , cursor
-                        , replace
-                        , left
-                        , right
-                        )
-
-import Data.Char ( chr
-                 , ord
-                 )
-
--- | Cell is a single memory cell in the Tape
-type Cell = Int
+import qualified Data.List.Zipper as Z
+import Data.Char (chr, ord)
+import Language.Brainfuck.Cell
 
 -- | A collection of Cells is a Tape, which emulates "memory"
-type Tape = Zipper Cell
+newtype Tape = Tape { unTape :: Z.Zipper Cell }
+                 deriving (Show, Eq)
+
+toTape :: Z.Zipper Cell -> Tape
+toTape (Z.Zip as bs) = Tape $ Z.Zip (fill as) (fill bs)
+  where fill xs = xs ++ repeat (toCell 0)
+
+mapTape :: (Z.Zipper Cell -> Z.Zipper Cell) -> Tape -> Tape
+mapTape func = toTape . func . unTape
 
 -- $setup
 -- >>> let tape0 = (Zip [] [0]) :: Tape
 -- >>> let tape1 = (Zip [] [1]) :: Tape
 -- >>> let tape9 = (Zip [4,3,2,1,0] [5,6,7,8,9]) :: Tape
 -- >>> let tapeX = (Zip [] [88]) :: Tape
+
+{- | Alternate syntax for `cursor`
+
+>>> cursor tape0
+0
+
+>>> cursor tape1
+1
+-}
+cursor :: Tape -> Cell
+cursor = Z.cursor . unTape
 
 {- | Alternate syntax for `cursor`
 
@@ -71,7 +84,7 @@ type Tape = Zipper Cell
 '\SOH'
 -}
 get :: Tape -> Char
-get = chr . cursor
+get = chr . unCell . (#)
 
 {- | Alternate syntax for `get`
 
@@ -97,7 +110,7 @@ Zip [] [88]
 'X'
 -}
 set :: Char -> Tape -> Tape
-set char = replace $ ord char `mod` 255
+set = replace . toCell . ord
 
 {- | Alterante syntax for `set`
 
@@ -141,7 +154,7 @@ X
 0
 -}
 start :: Tape
-start = Zip (repeat 0) (repeat 0)
+start = toTape Z.empty
 
 {- | Alternate syntax for `start`
 
@@ -151,6 +164,14 @@ start = Zip (repeat 0) (repeat 0)
 (###) :: Tape
 (###) = start
 
+{- | Move `Tape` cursor one position to the left
+
+>>> left tape9
+Zip [3,2,1,0] [4,5,6,7,8,9]
+-}
+left :: Tape -> Tape
+left = mapTape Z.left
+
 {- | Alternate syntax for `left`
 
 >>> (<<#) tape9
@@ -159,13 +180,24 @@ Zip [3,2,1,0] [4,5,6,7,8,9]
 (<<#) :: Tape -> Tape
 (<<#) = left
 
+{- | Move `Tape` cursor one position to the right
+
+>>> right tape9
+Zip [5,4,3,2,1,0] [6,7,8,9]
+-}
+right :: Tape -> Tape
+right = mapTape Z.right
+
 {- | Alternate syntax for `right`
 
 >>> (#>>) tape9
 Zip [5,4,3,2,1,0] [6,7,8,9]
 -}
 (#>>) :: Tape -> Tape
-(#>>) = right
+(#>>) = mapTape Z.right
+
+replace :: Cell -> Tape -> Tape
+replace cell tape = toTape $ Z.replace cell (unTape tape)
 
 {- | Increment the cell at the tape head, mod 255 (ASCII)
 
@@ -176,8 +208,7 @@ Zip [] [1]
 Zip [] [0]
 -}
 inc :: Tape -> Tape
-inc   (Zip _ []   ) = error "not possible"
-inc t@(Zip _ (c:_)) = replace (succ c `mod` 255) t
+inc tape = replace (succ `mapCell` cursor tape) tape
 
 {- | Alternate syntax for `inc`
 
@@ -199,8 +230,7 @@ Zip [] [0]
 Zip [] [254]
 -}
 dec :: Tape -> Tape
-dec   (Zip _ []   ) = error "not possible"
-dec t@(Zip _ (c:_)) = replace (pred c `mod` 255) t
+dec tape = replace (pred `mapCell` cursor tape) tape
 
 {- | Alternate syntax for `dec`
 

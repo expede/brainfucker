@@ -1,8 +1,11 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Language.Brainfuck.Tape.QuickCheck (tests) where
 
+import Language.Brainfuck.Cell
 import Language.Brainfuck.Tape
-import Data.List.Zipper (Zipper(Zip))
+
+import Data.List.Zipper
+import Control.Monad
 
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.QuickCheck hiding (infiniteList)
@@ -25,11 +28,12 @@ prop_inverts :: (Tape -> Tape) -> (Tape -> Tape) -> Tape -> Bool
 prop_inverts f g z = (middle . f . g) z == middle z
 
 middle :: Tape -> [Cell]
-middle (Zip as bs) = take 100 as ++ take 100 bs
+middle tape = joinHeads zipper
+  where zipper = unTape tape
+        joinHeads (Zip as bs) = take 100 as ++ take 100 bs
 
-instance {-# OVERLAPS #-} Arbitrary Tape where
-  arbitrary = do
-    list1 <- genListCell
-    list2 <- genListCell
-    return $ Zip list1 list2
-    where genListCell = infiniteList $ choose (0, 255)
+instance Arbitrary Cell where
+  arbitrary = toCell <$> choose (0, 255)
+
+instance Arbitrary Tape where
+  arbitrary = toTape <$> (arbitrary :: Gen (Zipper Cell))
