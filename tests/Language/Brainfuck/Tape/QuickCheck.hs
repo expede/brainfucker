@@ -1,33 +1,29 @@
-{-# LANGUAGE FlexibleInstances #-}
 module Language.Brainfuck.Tape.QuickCheck (tests) where
 
-import Language.Brainfuck.Cell
 import Language.Brainfuck.Tape
 
-import Data.List.Zipper
-import Control.Monad
-
 import Test.Tasty (TestTree, testGroup)
-import Test.Tasty.QuickCheck hiding (infiniteList)
-import Test.QuickCheck.Instances.List (infiniteList)
+import Test.Tasty.QuickCheck
 
 tests :: TestTree
 tests = testGroup "Tape"
   [ testProperty "(>#<) is idempotent" $ prop_idempotent . (>#<)
-  , testProperty "(#++) inverts (#--)" $ prop_commute (#++) (#--)
-  , testProperty "(#>>) inverts (<<#)" $ prop_inverts (#>>) (<<#)
+
+  , testProperty "(#++) commutes with (#--)"    $ prop_commute (#++) (#--)
+  , testProperty "(#++) mutually inverts (#--)" $ prop_mutual_invert (#++) (#--)
+
+  , testProperty "(#>>) commutes with (#<<)"    $ prop_commute (#>>) (<<#)
+  , testProperty "(#>>) mutually inverts (<<#)" $ prop_mutual_invert (#>>) (<<#)
   ]
 
 prop_idempotent :: (Tape -> Tape) -> Tape -> Bool
-prop_idempotent f a = (middle . f) a == (middle . f . f) a
+prop_idempotent f a = (show . f) a == (show . f . f) a
 
 prop_commute :: (Tape -> Tape) -> (Tape -> Tape) -> Tape -> Bool
-prop_commute f g a = (middle . f . g) a == (middle . g . f) a
+prop_commute f g a = (show . f . g) a == (show . g . f) a
 
-prop_inverts :: (Tape -> Tape) -> (Tape -> Tape) -> Tape -> Bool
-prop_inverts f g z = (middle . f . g) z == middle z
+prop_invert :: (Tape -> Tape) -> (Tape -> Tape) -> Tape -> Bool
+prop_invert f g z = (show . f . g) z == show z
 
-middle :: Tape -> [Cell]
-middle tape = joinHeads zipper
-  where zipper = unTape tape
-        joinHeads (Zip as bs) = take 100 as ++ take 100 bs
+prop_mutual_invert :: (Tape -> Tape) -> (Tape -> Tape) -> Tape -> Bool
+prop_mutual_invert f g z = prop_invert f g z && prop_invert g f z

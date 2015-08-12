@@ -41,7 +41,13 @@ import qualified Data.List.Zipper as Z
 
 -- | A collection of Cells is a Tape, which emulates "memory"
 newtype Tape = Tape { unTape :: Z.Zipper Cell }
-                 deriving (Show, Eq)
+
+instance Show Tape where
+  show tape = case unTape tape of
+    Z.Zip as (c:bs) -> (unwords $ show <$> take 100 as)
+                    ++ "  >>>[" ++ show c ++ "]<<< "
+                    ++ (unwords $ show <$> take 100 bs)
+    Z.Zip _ _ -> error "Finite Tape not possible"
 
 instance Arbitrary Tape where
   arbitrary = toTape <$> (arbitrary :: Gen (Z.Zipper Cell))
