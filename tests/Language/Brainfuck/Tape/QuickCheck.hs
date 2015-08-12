@@ -31,9 +31,3 @@ middle :: Tape -> [Cell]
 middle tape = joinHeads zipper
   where zipper = unTape tape
         joinHeads (Zip as bs) = take 100 as ++ take 100 bs
-
-instance Arbitrary Cell where
-  arbitrary = toCell <$> choose (0, 255)
-
-instance Arbitrary Tape where
-  arbitrary = toTape <$> (arbitrary :: Gen (Zipper Cell))

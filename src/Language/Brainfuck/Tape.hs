@@ -13,6 +13,7 @@ module Language.Brainfuck.Tape
   , Tape(unTape)
   , toTape
   , start
+  , tapify
   , (###)
   , cursor
   , (#)
@@ -32,26 +33,32 @@ module Language.Brainfuck.Tape
   , (#--)
   ) where
 
-import qualified Data.List.Zipper as Z
-import Data.Char (chr, ord)
 import Language.Brainfuck.Cell
+import Test.QuickCheck (Gen, Arbitrary(..))
+import qualified Data.List.Zipper as Z
 
 -- | A collection of Cells is a Tape, which emulates "memory"
 newtype Tape = Tape { unTape :: Z.Zipper Cell }
                  deriving (Show, Eq)
 
+instance Arbitrary Tape where
+  arbitrary = toTape <$> (arbitrary :: Gen (Z.Zipper Cell))
+
 toTape :: Z.Zipper Cell -> Tape
 toTape (Z.Zip as bs) = Tape $ Z.Zip (fill as) (fill bs)
   where fill xs = xs ++ repeat (toCell 0)
+
+tapify :: Z.Zipper Int -> Tape
+tapify = toTape . fmap toCell
 
 mapTape :: (Z.Zipper Cell -> Z.Zipper Cell) -> Tape -> Tape
 mapTape func = toTape . func . unTape
 
 -- $setup
--- >>> let tape0 = toTape $ fmap toCell $ Z.Zip [] [0]
--- >>> let tape1 = toTape $ fmap toCell $ Z.Zip [] [1]
--- >>> let tape9 = toTape $ fmap toCell $ Z.Zip [4,3,2,1,0] [5,6,7,8,9]
--- >>> let tapeX = toTape $ fmap toCell $ Z.Zip [] [88]
+-- >>> let tape0 = tapify $ Z.Zip [] [0]
+-- >>> let tape1 = tapify $ Z.Zip [] [1]
+-- >>> let tape9 = tapify $ Z.Zip [4,3,2,1,0] [5,6,7,8,9]
+-- >>> let tapeX = tapify $ Z.Zip [] [88]
 
 {- | Alternate syntax for `cursor`
 
@@ -84,7 +91,7 @@ cursor = Z.cursor . unTape
 '\SOH'
 -}
 get :: Tape -> Char
-get = chr . unCell . (#)
+get = cellChr . (#)
 
 {- | Alternate syntax for `get`
 
@@ -110,7 +117,7 @@ Since this version of Brainfuck is ASCII, it mods at character value 128 ('\128'
 'X'
 -}
 set :: Char -> Tape -> Tape
-set = replace . toCell . ord
+set = replace . chrToCell
 
 {- | Alterante syntax for `set`
 
@@ -166,7 +173,7 @@ start = toTape Z.empty
 
 {- | Move `Tape` cursor one position to the left
 
->>> unCell $ cursor $ left tape9
+>>> unCell . cursor $ left tape9
 4
 -}
 left :: Tape -> Tape
@@ -174,7 +181,7 @@ left = mapTape Z.left
 
 {- | Alternate syntax for `left`
 
->>> unCell $ cursor $ (<<#) tape9
+>>> unCell . cursor $ (<<#) tape9
 4
 -}
 (<<#) :: Tape -> Tape
@@ -182,7 +189,7 @@ left = mapTape Z.left
 
 {- | Move `Tape` cursor one position to the right
 
->>> unCell $ cursor $ right tape9
+>>> unCell . cursor $ right tape9
 6
 -}
 right :: Tape -> Tape
@@ -190,32 +197,32 @@ right = mapTape Z.right
 
 {- | Alternate syntax for `right`
 
->>> unCell $ cursor $ (#>>) tape9
+>>> unCell . cursor $ (#>>) tape9
 6
 -}
 (#>>) :: Tape -> Tape
 (#>>) = mapTape Z.right
 
 replace :: Cell -> Tape -> Tape
-replace cell tape = toTape $ Z.replace cell (unTape tape)
+replace cell = toTape . Z.replace cell . unTape
 
 {- | Increment the cell at the tape head, mod 255 (ASCII)
 
 >>> unCell . cursor $ inc tape0
 1
 
->>> unCell . cursor $ inc $ toTape $ Z.Zip [] [(toCell 254)]
+>>> unCell . cursor . inc . tapify $ Z.Zip [] [254]
 0
 -}
 inc :: Tape -> Tape
-inc tape = replace (succ `mapCell` cursor tape) tape
+inc tape = replace (succ $ cursor tape) tape
 
 {- | Alternate syntax for `inc`
 
 >>> unCell . cursor $ (#++) tape0
 1
 
->>> unCell . cursor . (#++) . toTape $ Z.Zip [] [(toCell 254)]
+>>> unCell . cursor . (#++) . tapify $ Z.Zip [] [254]
 0
 -}
 (#++) :: Tape -> Tape
@@ -223,21 +230,21 @@ inc tape = replace (succ `mapCell` cursor tape) tape
 
 {- | Decrement the cell at the tape head, mod 256 (ASCII)
 
->>> unCell $ cursor $ dec tape1
+>>> unCell . cursor $ dec tape1
 0
 
->>> unCell $ cursor $ dec tape0
+>>> unCell . cursor $ dec tape0
 254
 -}
 dec :: Tape -> Tape
-dec tape = replace (pred `mapCell` cursor tape) tape
+dec tape = replace (pred $ cursor tape) tape
 
 {- | Alternate syntax for `dec`
 
->>> unCell $ cursor $ (#--) tape1
+>>> unCell . cursor $ (#--) tape1
 0
 
->>> unCell $ cursor $ (#--) tape0
+>>> unCell . cursor $ (#--) tape0
 254
 -}
 (#--) :: Tape -> Tape
