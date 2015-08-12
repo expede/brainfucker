@@ -22,9 +22,7 @@ module Language.Brainfuck.AST ( AST
                               , sequence'
                               ) where
 
-import Control.Monad.Free ( Free(..)
-                          , liftF
-                          )
+import Control.Monad.Free (Free(..), liftF)
 
 -- | Description of all Brainfuck commands. `a` is the nested remainder of the tree.
 data Bfk a = TapeL   a   -- ^ "Move tape left"
