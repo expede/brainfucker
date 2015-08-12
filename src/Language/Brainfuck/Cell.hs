@@ -1,11 +1,8 @@
 {-# OPTIONS_HADDOCK show-extensions, ignore-exports #-}
 {-#LANGUAGE GeneralizedNewtypeDeriving #-}
 
-{-|
-Module      : Cell
-Description : Emulate an individual ASCII memory cell
--}
-
+-- Module      : Cell
+-- Description : Emulate an individual ASCII memory cell
 module Language.Brainfuck.Cell ( Cell(unCell)
                                , toCell
                                , cellChr
