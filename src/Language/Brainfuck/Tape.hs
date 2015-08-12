@@ -12,11 +12,13 @@ module Language.Brainfuck.Tape
   , unCell
   , Tape(unTape)
   , toTape
-  , start
   , tapify
+  , start
   , (###)
   , cursor
   , (#)
+  , replaceCursor
+  , adjustCursor
   , get
   , (<#>)
   , printCell
