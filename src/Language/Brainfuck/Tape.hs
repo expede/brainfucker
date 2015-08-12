@@ -51,8 +51,8 @@ toTape (Z.Zip as bs) = Tape $ Z.Zip (fill as) (fill bs)
 tapify :: Z.Zipper Int -> Tape
 tapify = toTape . fmap toCell
 
-mapTape :: (Z.Zipper Cell -> Z.Zipper Cell) -> Tape -> Tape
-mapTape func = toTape . func . unTape
+liftT :: (Z.Zipper Cell -> Z.Zipper Cell) -> Tape -> Tape
+liftT func = toTape . func . unTape
 
 -- $setup
 -- >>> let tape0 = tapify $ Z.Zip [] [0]
@@ -117,15 +117,15 @@ Since this version of Brainfuck is ASCII, it mods at character value 128 ('\128'
 'X'
 -}
 set :: Char -> Tape -> Tape
-set = replace . chrToCell
+set = replaceCursor . chrToCell
 
 {- | Alterante syntax for `set`
 
->>> unCell . cursor $ (>#<) 'X' tape0
-88
+>>> cursor $ (>#<) 'X' tape0
+'X'
 
->>> unCell . cursor $ (>#<) '\343' tape0
-88
+>>> cursor $ (>#<) '\343' tape0
+'X'
 
 >>> (<#>) $ (>#<) '\343' tape0
 'X'
@@ -177,7 +177,7 @@ start = toTape Z.empty
 4
 -}
 left :: Tape -> Tape
-left = mapTape Z.left
+left = liftT Z.left
 
 {- | Alternate syntax for `left`
 
@@ -193,7 +193,7 @@ left = mapTape Z.left
 6
 -}
 right :: Tape -> Tape
-right = mapTape Z.right
+right = liftT Z.right
 
 {- | Alternate syntax for `right`
 
@@ -201,10 +201,23 @@ right = mapTape Z.right
 6
 -}
 (#>>) :: Tape -> Tape
-(#>>) = mapTape Z.right
+(#>>) = liftT Z.right
 
-replace :: Cell -> Tape -> Tape
-replace cell = toTape . Z.replace cell . unTape
+{- Replace the `Tape`'s cursor with another `Cell`
+
+>>> cursor $ replaceCursor (chrToCell 'X') tape0
+'X'
+-}
+replaceCursor :: Cell -> Tape -> Tape
+replaceCursor cell = liftT $ Z.replace cell
+
+{- Adjust the existing `Tape`'s cursor
+
+>>> cursor $ adjustCursor (* 88) tape1
+'X'
+-}
+adjustCursor :: (Int -> Int) -> Tape -> Tape
+adjustCursor func tape = replaceCursor (liftC func $ cursor tape) tape
 
 {- | Increment the cell at the tape head, mod 255 (ASCII)
 
@@ -215,7 +228,7 @@ replace cell = toTape . Z.replace cell . unTape
 0
 -}
 inc :: Tape -> Tape
-inc tape = replace (succ $ cursor tape) tape
+inc = adjustCursor succ
 
 {- | Alternate syntax for `inc`
 
@@ -237,7 +250,7 @@ inc tape = replace (succ $ cursor tape) tape
 254
 -}
 dec :: Tape -> Tape
-dec tape = replace (pred $ cursor tape) tape
+dec = adjustCursor pred
 
 {- | Alternate syntax for `dec`
 
