@@ -1,5 +1,5 @@
 {-# OPTIONS_HADDOCK show-extensions, ignore-exports #-}
-{-# LANGUAGE DeriveFunctor, DeriveFoldable #-}
+{-# LANGUAGE DeriveFunctor, DeriveFoldable, TypeSynonymInstances, FlexibleInstances #-}
 
 {-|
 Module      : AST
@@ -23,9 +23,11 @@ module Language.Brainfuck.AST ( AST
                               ) where
 
 import Control.Monad.Free (Free(..), liftF)
+import Test.QuickCheck (Gen, Arbitrary(..), sized, choose, vectorOf)
 
 -- | Description of all Brainfuck commands. `a` is the nested remainder of the tree.
-data Bfk a = TapeL   a   -- ^ "Move tape left"
+data Bfk a = End         -- ^ End of computation. Only here for completeness.
+           | TapeL   a   -- ^ "Move tape left"
            | TapeR   a   -- ^ "Move tape right"
            | IncCell a   -- ^ "Increment cell (tape head) by one"
            | DecCell a   -- ^ "Decrement cell (tape head) by one"
@@ -38,8 +40,30 @@ data Bfk a = TapeL   a   -- ^ "Move tape left"
                       , Foldable
                       )
 
+instance Arbitrary a => Arbitrary (Bfk a) where
+  arbitrary = do
+    n <- choose (0, 7) :: Gen Int
+    a <- arbitrary
+    b <- arbitrary
+    return $ case n of
+                  0 -> TapeL   a
+                  1 -> TapeR   a
+                  2 -> IncCell a
+                  3 -> DecCell a
+                  4 -> GetCell a
+                  5 -> SetCell a
+                  6 -> Loop    a b
+                  7 -> End
+
 -- | Wrap `Bfk` in a Free Monad
 type AST a = Free Bfk a
+instance Arbitrary a => Arbitrary (AST a) where
+  arbitrary = do
+    bfk <- arbitrary
+    return $ Free bfk
+
+-- instance Arbitrary a => Arbitrary (AST a) where
+--   arbitrary = liftM Free arbitrary :: Gen (AST a)
 
 {- | Suspended `TapeL`, and easily combined with `Bfk` helpers with `>>`
 
@@ -117,46 +141,57 @@ Free (Loop (Free (SetCell (Pure ()))) (Free (SetCell (Pure ()))))
 loopStart :: AST ()
 loopStart = liftF $ Loop () ()
 
-{- | Construct the subtree of a #Loop#
-
->>> subtree tapeL
-Free (Loop (Free (TapeL (Pure ()))) (Pure ()))
--}
+-- | Construct the subtree of a #Loop#
+--
+-- >>> subtree tapeL
+-- Free (Loop (Free (TapeL (Pure ()))) (Pure ()))
 subtree :: AST () -> AST ()
 subtree ast = Free $ Loop ast (Pure ())
 
--- | "Right compose": compose the main spine of an AST (no inner subtrees)
---
--- >>> tapeL .> tapeR
--- Free (TapeL (Free (TapeR (Pure ()))))
---
--- >>> (subtree tapeL) .> tapeR
--- Free (Loop (Free (TapeL (Pure ()))) (Free (TapeR (Pure ()))))
---
--- >>> tapeR .> subtree tapeL
--- Free (TapeR (Free (Loop (Free (TapeL (Pure ()))) (Pure ()))))
---
--- >>> tapeR .> subtree tapeL .> incCell
--- Free (TapeR (Free (Loop (Free (TapeL (Pure ()))) (Free (IncCell (Pure ()))))))
+{- | "Right append": append to the main spine of an AST (no inner subtrees)
+
+tapeR
+  \*
+  tapeL
+    \*
+    subtree
+    /      \*
+  tapeR     tapeL
+    \          \*
+   incCell     subtree
+               /      \*
+             subtree  printCell
+             /     \          .
+           tapeL   tapeL      . (.>) (decCell >> decCell)
+                              .
+                             decCell
+                                \
+                               decCell
+
+>>> tapeR .> subtree tapeL
+Free (TapeR (Free (Loop (Free (TapeL (Pure ()))) (Pure ()))))
+-}
 infixl 1 .>
 (.>) :: AST () -> AST () -> AST ()
 Pure _  .> ast = ast
-Free xs .> ast = Free $ case xs of
-  TapeL   as -> TapeL   (as .> ast)
-  TapeR   as -> TapeR   (as .> ast)
-  IncCell as -> IncCell (as .> ast)
-  DecCell as -> DecCell (as .> ast)
-  GetCell as -> GetCell (as .> ast)
-  SetCell as -> SetCell (as .> ast)
-  Loop bs as -> Loop bs (as .> ast)
+Free xs .> ast = case xs of
+  End        -> ast
+  TapeL   as -> Free $ TapeL   (as .> ast)
+  TapeR   as -> Free $ TapeR   (as .> ast)
+  IncCell as -> Free $ IncCell (as .> ast)
+  DecCell as -> Free $ DecCell (as .> ast)
+  GetCell as -> Free $ GetCell (as .> ast)
+  SetCell as -> Free $ SetCell (as .> ast)
+  Loop bs as -> Free $ Loop bs (as .> ast)
 
 -- | Sequence'
+--
 -- >>> sequence' [tapeL, tapeR]
 -- Free (TapeL (Free (TapeR (Pure ()))))
 sequence' :: [AST ()] -> AST ()
 sequence' = foldr (.>) (Pure ())
 
-{- | Simply `Pure ()`. In effect, this operation acts as the identity.
+{- | Simply `Pure ()`. `AST`'s "zero" element.
 
 >>> suspend
 Pure ()

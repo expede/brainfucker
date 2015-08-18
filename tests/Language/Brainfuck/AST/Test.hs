@@ -4,33 +4,40 @@ module Language.Brainfuck.AST.Test (astSuite) where
 
 import Language.Brainfuck.AST
 
-import Test.Tasty ( TestTree
-                  , testGroup
-                  )
-
-import Test.Tasty.QuickCheck ( Gen
-                             , Arbitrary
-                             , CoArbitrary
-                             , testProperty
-                             , forAll
-                             , suchThat
-                             , arbitrary
-                             )
-
-import Test.Properties (idempotent)
+import Test.Tasty
+import Test.Tasty.HUnit
+import Test.Tasty.QuickCheck
 
 instance Arbitrary (Bfk a)
 -- instance CoArbitrary (Bfk a)
 
 astSuite :: TestTree
-astSuite = testGroup "Tape"
-  [ -- testProperty "`set` is idempotent" $
-      -- (end >> end >> tapeL) == (end >> tapeL)
-  -- , testProperty "`left` and `right` commute for all tapes" $
-  --     forAll tapes $ commutes left right
-  -- , testProperty "`left` and `right` invert for all tapes" $
-  --     forAll tapes $ inverts left right
+astSuite = testGroup "AST"
+  [ testRightCompose
   ]
 
-commutes :: Eq a => (a -> a) -> (a -> a) -> a -> Bool
-commutes f g a = (f . g) a == (g . f) a
+testRightCompose :: TestTree
+testRightCompose = testGroup "(.>)"
+  [ testCase "no loops: append normally" $
+      (tapeL .> tapeR) @?= Free (TapeL (Free (TapeR (Pure ()))))
+  ]
+
+prop_normal_append = ast1 .> ast2 == ast1 >> ast2
+  where ast1 = gen noLoopAST
+        ast2 = gen noLoopAST
+
+noLoopAST = choose [incCell, decCell, tapeL, tapeR, getCell, setCell]
+-- testSequence' = ()
+
+-- >>> (subtree tapeL) .> tapeR
+-- Free (Loop (Free (TapeL (Pure ()))) (Free (TapeR (Pure ()))))
+
+-- >>> tapeR .> subtree tapeL
+-- Free (TapeR (Free (Loop (Free (TapeL (Pure ()))) (Pure ()))))
+
+-- >>> tapeR .> subtree tapeL .> incCell
+-- Free (TapeR (Free (Loop (Free (TapeL (Pure ()))) (Free (IncCell (Pure ()))))))
+
+
+{-
+-}

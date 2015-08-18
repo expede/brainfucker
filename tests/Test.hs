@@ -12,6 +12,7 @@ import Test.SmallCheck.Series
 
 import Language.Brainfuck.Cell.Test
 import Language.Brainfuck.Tape.Test
+import Language.Brainfuck.AST.Test
 
 main :: IO ()
 main = defaultMain tests
@@ -21,6 +22,5 @@ tests = localOption (QC.QuickCheckTests 9999) $ testGroup "All Tests"
           [ cellSuite
           , tapeSuite
           -- , lexSuite
-          -- , astSuite
-          -- interpretSuite
+          , astSuite
           ]

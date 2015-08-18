@@ -44,29 +44,35 @@ newtype Tape = Tape { unTape :: Z.Zipper Cell }
 
 instance Show Tape where
   show tape = case unTape tape of
-    Z.Zip as (c:bs) -> (unwords $ show <$> take 100 as)
+    Z.Zip as (c:bs) -> unwords (show <$> take 100 as)
                     ++ "  >>>[" ++ show c ++ "]<<< "
-                    ++ (unwords $ show <$> take 100 bs)
+                    ++ unwords (show <$> take 100 bs)
     Z.Zip _ _ -> error "Finite Tape not possible"
 
 instance Arbitrary Tape where
   arbitrary = toTape <$> (arbitrary :: Gen (Z.Zipper Cell))
-
-toTape :: Z.Zipper Cell -> Tape
-toTape (Z.Zip as bs) = Tape $ Z.Zip (fill as) (fill bs)
-  where fill xs = xs ++ repeat (toCell 0)
-
-tapify :: Z.Zipper Int -> Tape
-tapify = toTape . fmap toCell
-
-liftT :: (Z.Zipper Cell -> Z.Zipper Cell) -> Tape -> Tape
-liftT func = toTape . func . unTape
 
 -- $setup
 -- >>> let tape0 = tapify $ Z.Zip [] [0]
 -- >>> let tape1 = tapify $ Z.Zip [] [1]
 -- >>> let tape9 = tapify $ Z.Zip [4,3,2,1,0] [5,6,7,8,9]
 -- >>> let tapeX = tapify $ Z.Zip [] [88]
+
+-- | Convert a `Zipper` to a `Tape`
+toTape :: Z.Zipper Cell -> Tape
+toTape (Z.Zip as bs) = Tape $ Z.Zip (fill as) (fill bs)
+  where fill xs = xs ++ repeat (toCell 0)
+
+-- | Convert a plain `Zipper Int` to `Tape`, will internals `Cell`s
+tapify :: Z.Zipper Int -> Tape
+tapify = toTape . fmap toCell
+
+{- | Lift a function into the wrapped `Zipper`
+>>> cursor $ liftT (Z.replace $ toCell 88) tape0
+'X'
+-}
+liftT :: (Z.Zipper Cell -> Z.Zipper Cell) -> Tape -> Tape
+liftT func = toTape . func . unTape
 
 {- | Alternate syntax for `cursor`
 

@@ -44,6 +44,7 @@ interpret text = interpret' (toAST text) (###)
 Hello World!
 
 >>> interpret' (toAST helloWorldHard) start
+module Language.Brainfuck.Tape.Test (tapeSuite) where
 Hello World!
 -}
 interpret' :: AST () -> Tape -> IO ()
