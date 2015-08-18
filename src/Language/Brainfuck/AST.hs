@@ -181,7 +181,7 @@ Free xs .> ast = case xs of
   SetCell as -> Free $ SetCell (as .> ast)
   Loop bs as -> Free $ Loop bs (as .> ast)
 
--- | Sequence'
+-- | Right append a sequence of `AST ()`s
 --
 -- >>> sequence' [tapeL, tapeR]
 -- Free (TapeL (Free (TapeR (Pure ()))))
