@@ -46,14 +46,14 @@ instance Arbitrary a => Arbitrary (Bfk a) where
     a <- arbitrary
     b <- arbitrary
     return $ case n of
-                  0 -> TapeL   a
-                  1 -> TapeR   a
-                  2 -> IncCell a
-                  3 -> DecCell a
-                  4 -> GetCell a
-                  5 -> SetCell a
-                  6 -> Loop    a b
-                  7 -> End
+                  0 -> End
+                  1 -> TapeL   a
+                  2 -> TapeR   a
+                  3 -> IncCell a
+                  4 -> DecCell a
+                  5 -> GetCell a
+                  6 -> SetCell a
+                  7 -> Loop    a b
 
 -- | Wrap `Bfk` in a Free Monad
 type AST a = Free Bfk a
@@ -61,9 +61,6 @@ instance Arbitrary a => Arbitrary (AST a) where
   arbitrary = do
     bfk <- arbitrary
     return $ Free bfk
-
--- instance Arbitrary a => Arbitrary (AST a) where
---   arbitrary = liftM Free arbitrary :: Gen (AST a)
 
 {- | Suspended `TapeL`, and easily combined with `Bfk` helpers with `>>`
 
