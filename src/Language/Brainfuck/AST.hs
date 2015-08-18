@@ -23,7 +23,7 @@ module Language.Brainfuck.AST ( AST
                               ) where
 
 import Control.Monad.Free (Free(..), liftF)
-import Test.QuickCheck (Gen, Arbitrary(..), sized, choose, vectorOf)
+import Test.QuickCheck (Gen, Arbitrary(..), choose)
 
 -- | Description of all Brainfuck commands. `a` is the nested remainder of the tree.
 data Bfk a = End         -- ^ End of computation. Only here for completeness.
