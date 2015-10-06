@@ -17,7 +17,6 @@ module Language.Brainfuck.AST ( AST
                               , setCell
                               , loopStart
                               , subtree
-                              , suspend
                               ) where
 
 import Control.Monad.Free (Free(..), liftF)
@@ -151,14 +150,3 @@ loopStart = liftF $ Loop () ()
 -- Free (Loop (Free (TapeL (Pure ()))) (Pure ()))
 subtree :: AST () -> AST ()
 subtree ast = Free $ Loop ast (Pure ())
-
-{- | Simply `Pure ()`. `AST`'s "zero" element.
-
->>> suspend
-Pure ()
-
->>> tapeL == (tapeL .> suspend)
-True
--}
-suspend :: AST ()
-suspend = Pure ()
