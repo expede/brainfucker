@@ -18,16 +18,13 @@ module Language.Brainfuck.AST ( AST
                               , loopStart
                               , subtree
                               , suspend
-                              , (.>)
-                              , sequence'
                               ) where
 
 import Control.Monad.Free (Free(..), liftF)
 import Test.QuickCheck (Gen, Arbitrary(..), choose)
 
 -- | Description of all Brainfuck commands. `a` is the nested remainder of the tree.
-data Bfk a = End         -- ^ End of computation. Only here for completeness.
-           | TapeL   a   -- ^ "Move tape left"
+data Bfk a = TapeL   a   -- ^ "Move tape left"
            | TapeR   a   -- ^ "Move tape right"
            | IncCell a   -- ^ "Increment cell (tape head) by one"
            | DecCell a   -- ^ "Decrement cell (tape head) by one"
@@ -42,25 +39,35 @@ data Bfk a = End         -- ^ End of computation. Only here for completeness.
 
 instance Arbitrary a => Arbitrary (Bfk a) where
   arbitrary = do
-    n <- choose (0, 7) :: Gen Int
+    n <- choose (0, 6) :: Gen Int
     a <- arbitrary
     b <- arbitrary
     return $ case n of
-                  0 -> End
-                  1 -> TapeL   a
-                  2 -> TapeR   a
-                  3 -> IncCell a
-                  4 -> DecCell a
-                  5 -> GetCell a
-                  6 -> SetCell a
-                  7 -> Loop    a b
+                  0 -> TapeL   a
+                  1 -> TapeR   a
+                  2 -> IncCell a
+                  3 -> DecCell a
+                  4 -> GetCell a
+                  5 -> SetCell a
+                  _ -> Loop    a b
 
 -- | Wrap `Bfk` in a Free Monad
 type AST a = Free Bfk a
+
 instance Arbitrary a => Arbitrary (AST a) where
   arbitrary = do
     bfk <- arbitrary
     return $ Free bfk
+
+instance Monoid (AST ()) where
+  mempty  = return mempty
+
+  Pure _  `mappend` ast = ast
+  Free xs `mappend` ast = case xs of
+    Loop bs as -> Free . Loop bs $ as `mappend` ast
+    _          -> Free $ fmap (`mappend` ast) xs
+
+  mconcat = foldr mappend mempty
 
 {- | Suspended `TapeL`, and easily combined with `Bfk` helpers with `>>`
 
@@ -144,49 +151,6 @@ loopStart = liftF $ Loop () ()
 -- Free (Loop (Free (TapeL (Pure ()))) (Pure ()))
 subtree :: AST () -> AST ()
 subtree ast = Free $ Loop ast (Pure ())
-
-{- | "Right append": append to the main spine of an AST (no inner subtrees)
-
-tapeR
-  \*
-  tapeL
-    \*
-    subtree
-    /      \*
-  tapeR     tapeL
-    \          \*
-   incCell     subtree
-               /      \*
-             subtree  printCell
-             /     \          .
-           tapeL   tapeL      . (.>) (decCell >> decCell)
-                              .
-                             decCell
-                                \
-                               decCell
-
->>> tapeR .> subtree tapeL
-Free (TapeR (Free (Loop (Free (TapeL (Pure ()))) (Pure ()))))
--}
-infixl 1 .>
-(.>) :: AST () -> AST () -> AST ()
-Pure _  .> ast = ast
-Free xs .> ast = case xs of
-  End        -> ast
-  TapeL   as -> Free $ TapeL   (as .> ast)
-  TapeR   as -> Free $ TapeR   (as .> ast)
-  IncCell as -> Free $ IncCell (as .> ast)
-  DecCell as -> Free $ DecCell (as .> ast)
-  GetCell as -> Free $ GetCell (as .> ast)
-  SetCell as -> Free $ SetCell (as .> ast)
-  Loop bs as -> Free $ Loop bs (as .> ast)
-
--- | Right append a sequence of `AST ()`s
---
--- >>> sequence' [tapeL, tapeR]
--- Free (TapeL (Free (TapeR (Pure ()))))
-sequence' :: [AST ()] -> AST ()
-sequence' = foldr (.>) (Pure ())
 
 {- | Simply `Pure ()`. `AST`'s "zero" element.
 

@@ -16,7 +16,7 @@ module Language.Brainfuck.Interpret ( Tape
 
 import Language.Brainfuck.Tape
 import Language.Brainfuck.Lex (toAST)
-import Language.Brainfuck.AST (AST, Bfk(..), (.>))
+import Language.Brainfuck.AST (AST, Bfk(..))
 
 import Control.Monad.Free (Free(..))
 import Data.Text (Text)
@@ -61,4 +61,4 @@ interpret' ast@(Free xs) tape = case xs of
     interpret' ys $ newChar >#< tape
   Loop zs ys -> case unCell ((#) tape) of
     0 -> interpret' ys tape
-    _ -> interpret' (zs .> ast) tape
+    _ -> interpret' (zs `mappend` ast) tape

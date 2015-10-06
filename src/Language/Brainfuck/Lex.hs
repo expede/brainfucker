@@ -145,7 +145,7 @@ Right (Free (Loop (Free (IncCell (Free (Loop (Free (DecCell (Pure ()))) (Free (G
 Left "',': Failed reading: satisfy"
 -}
 inLoop :: Lexer
-inLoop = char '[' *> node `manyTill'` char ']' >>= \x -> return . subtree $ sequence' x
+inLoop = char '[' *> node `manyTill'` char ']' >>= \x -> return . subtree $ mconcat x
 
 {- | Skip past all non-brainfuck characters.
 Delegates first brainfuck match to the correct parser.
@@ -205,6 +205,6 @@ Pure ()
 -}
 toAST :: Text -> AST ()
 toAST text = case parsed of
-  Right result -> sequence' result
+  Right result -> mconcat result
   Left  err    -> error err
   where parsed = parseOnly (many' node) text
