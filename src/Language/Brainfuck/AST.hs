@@ -60,12 +60,12 @@ instance Arbitrary a => Arbitrary (AST a) where
     return $ Free bfk
 
 instance Monoid (AST ()) where
-  mempty  = return mempty
+  mempty = return mempty
 
-  Pure _  `mappend` ast = ast
-  Free xs `mappend` ast = case xs of
-    Loop bs as -> Free . Loop bs $ as `mappend` ast
-    _          -> Free $ fmap (`mappend` ast) xs
+  xs `mappend` ast = case xs of
+    Pure _            -> ast
+    Free (Loop bs as) -> Free $ Loop bs (as `mappend` ast)
+    Free as           -> Free $ fmap (`mappend` ast) as
 
   mconcat = foldr mappend mempty
 
