@@ -5,6 +5,6 @@ import           ClassyPrelude
 
 main :: IO ()
 main = do
-  path    <- show  <$> getLine
-  machine <- setup <$> parseFile path
-  run machine
+  path    <- show <$> getLine
+  program <- parseFile path
+  run $ initProgram program

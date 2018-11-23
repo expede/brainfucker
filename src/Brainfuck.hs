@@ -4,7 +4,7 @@
 {-# LANGUAGE RecordWildCards   #-}
 
 module Brainfuck
-  ( setup
+  ( initProgram
   , run
   , parseFile
   ) where
@@ -19,8 +19,8 @@ import           Data.Vector           ((!?))
 import           Brainfuck.Cell        (stepCell)
 import           Brainfuck.Control     (Control (..))
 import           Brainfuck.Interaction (Communication (..))
-import           Brainfuck.Machine     (Machine (..), cellPtr, jumpStack, pc,
-                                        setup, tape)
+import           Brainfuck.Machine     (Machine (..), cellPtr, initProgram,
+                                        jumpStack, pc, tape)
 import           Brainfuck.Parser      (parseFile)
 import           Brainfuck.Program     (Opcode (..), findLoopEnd)
 import           Brainfuck.Tape        (stepTape)

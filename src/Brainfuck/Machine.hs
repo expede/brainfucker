@@ -9,7 +9,7 @@ module Brainfuck.Machine
   , pc
   , pred
   , program
-  , setup
+  , initProgram
   , tape
   ) where
 
@@ -30,8 +30,8 @@ data Machine = Machine
 
 makeLenses ''Machine
 
-setup :: Program -> Machine
-setup pgm = blank & program .~ pgm
+initProgram :: Program -> Machine
+initProgram pgm = blank & program .~ pgm
 
 blank :: Machine
 blank = Machine
