@@ -62,9 +62,7 @@ interpret m@(Machine { .. }) = \case
       (End,   _)       ->
         case headMay _jumpStack of
           Nothing       -> error "Program error: nowhere left to jump back to!"
-          Just location ->
-            m & pc .~ location
-              & prep
+          Just location -> m & pc .~ location & prep
 
 prep :: MonadIO m => Machine -> m Machine
 prep = pc %~ succ >>> pure
