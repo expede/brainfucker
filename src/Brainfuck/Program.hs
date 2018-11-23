@@ -29,13 +29,13 @@ findLoopEnd :: Program -> Pointer -> Pointer
 findLoopEnd program = go 0
   where
     go :: Word8 -> Pointer -> Pointer
-    go depth counter =
-      case program !? counter of
-        Nothing           -> error $ show counter <> " loop is missing a `]`!"
+    go depth pointer =
+      case program !? pointer of
+        Nothing           -> error $ show pointer <> " loop is missing a `]`!"
 
         Just (Loop End)   -> if depth == 0
-                              then counter
-                              else go (pred depth) (succ counter)
+                              then pointer
+                              else go (pred depth) (succ pointer)
 
-        Just (Loop Begin) -> go (succ depth) (succ counter)
-        _                 -> go depth        (succ counter)
+        Just (Loop Begin) -> go (succ depth) (succ pointer)
+        _                 -> go depth        (succ pointer)
