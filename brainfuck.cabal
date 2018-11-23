@@ -1,0 +1,135 @@
+-- This file has been generated from package.yaml by hpack version 0.28.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 05086bd749f22dbf87d4e53848f7db53db0cc77dcc88d70d89d82196b48926cd
+
+name:           brainfuck
+version:        0.0.0.1
+category:       TODO
+stability:      alpha (experimental)
+homepage:       https://github.com/expede/brainfuck#readme
+bug-reports:    https://github.com/expede/brainfuck/issues
+author:         Brooklyn Zelenka
+maintainer:     be.zelenka@gmail.com
+copyright:      © 2017 Brooklyn Zelenka
+license:        MIT
+license-file:   LICENSE.md
+tested-with:    GHC==8.0.1 GHC==8.0.2 GHC==8.2.1
+build-type:     Simple
+cabal-version:  >= 1.10
+extra-source-files:
+    CHANGELOG.md
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/expede/brainfuck
+
+library
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates
+  build-depends:
+      base
+    , bytestring
+    , classy-prelude
+    , lens
+    , vector
+  exposed-modules:
+      Brainfuck
+  other-modules:
+      Brainfuck.Cell
+      Brainfuck.Control
+      Brainfuck.Interaction
+      Brainfuck.Machine
+      Brainfuck.Parser
+      Brainfuck.Pointer
+      Brainfuck.Program
+      Brainfuck.Tape
+      Paths_brainfuck
+  default-language: Haskell2010
+
+executable app
+  main-is: Main.hs
+  other-modules:
+      Paths_brainfuck
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates
+  build-depends:
+      base
+    , brainfuck
+    , bytestring
+    , classy-prelude
+    , lens
+    , vector
+  default-language: Haskell2010
+
+test-suite brainfuck-doctest
+  type: exitcode-stdio-1.0
+  main-is: Doctest.hs
+  other-modules:
+      Driver
+      Spec
+      Paths_brainfuck
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -threaded -rtsopts -with-rtsopts=-N -O2
+  build-depends:
+      Glob
+    , QuickCheck
+    , base
+    , brainfuck
+    , bytestring
+    , classy-prelude
+    , doctest
+    , lens
+    , vector
+  default-language: Haskell2010
+
+test-suite brainfuck-test
+  type: exitcode-stdio-1.0
+  main-is: Driver.hs
+  other-modules:
+      Doctest
+      Spec
+      Paths_brainfuck
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -threaded -rtsopts -with-rtsopts=-N -O2
+  build-depends:
+      base
+    , brainfuck
+    , bytestring
+    , classy-prelude
+    , flow
+    , hspec
+    , hspec-discover
+    , lens
+    , tasty
+    , tasty-discover >=4.1
+    , tasty-hspec
+    , tasty-hunit
+    , tasty-rerun
+    , tasty-smallcheck
+    , vector
+  default-language: Haskell2010
+
+benchmark brainfuck-benchmark
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+      Paths_brainfuck
+  hs-source-dirs:
+      bench
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -threaded -rtsopts -with-rtsopts=-N -O2
+  build-depends:
+      base
+    , brainfuck
+    , bytestring
+    , classy-prelude
+    , criterion
+    , lens
+    , vector
+  default-language: Haskell2010
