@@ -60,9 +60,9 @@ interpret m@(Machine { .. }) = \case
       (Begin, _)       -> m & jumpStack %~ cons _pc & prep
       (End,   Just 0)  -> m & jumpStack %~ tailEx & prep
       (End,   _)       ->
-        case headMay _jumpStack of
-          Nothing       -> error "Program error: nowhere left to jump back to!"
-          Just location -> m & pc .~ location & prep
+        case _jumpStack of
+          []             -> error "Program error: nowhere left to jump back to!"
+          (location : _) -> m & pc .~ location & prep
 
 prep :: MonadIO m => Machine -> m Machine
 prep = pc %~ succ >>> pure
