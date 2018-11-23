@@ -16,13 +16,14 @@ import           Data.Char             (chr, ord)
 import           Data.Monoid           (Sum (..))
 import           Data.Vector           ((!?))
 
-import           Brainfuck.Cell
-import           Brainfuck.Control
-import           Brainfuck.Interaction
-import           Brainfuck.Machine
+import           Brainfuck.Cell        (stepCell)
+import           Brainfuck.Control     (Control (..))
+import           Brainfuck.Interaction (Communication (..))
+import           Brainfuck.Machine     (Machine (..), cellPtr, jumpStack, pc,
+                                        setup, tape)
 import           Brainfuck.Parser      (parseFile)
-import           Brainfuck.Program
-import           Brainfuck.Tape
+import           Brainfuck.Program     (Opcode (..), findLoopEnd)
+import           Brainfuck.Tape        (stepTape)
 
 run :: MonadIO m => Machine -> m ()
 run machine =
