@@ -1,5 +1,9 @@
 # brainfucker
-A simple [brainfuck](http://esolangs.org/wiki/Brainfuck) interpreter (and library).
+A dead simple [Brainfuck](http://esolangs.org/wiki/Brainfuck) interpreter and library.
+
+[![Build Status](https://travis-ci.org/expede/brainfucker.svg?branch=master)](https://travis-ci.org/expede/brainfucker)
+
+![](https://thumbs.gfycat.com/OccasionalUnrulyHairstreakbutterfly-size_restricted.gif)
 
 # Run
 
@@ -12,8 +16,3 @@ stack run
 ```bash
 stack test
 ```
-
-## Build Status
-| Branch | CircleCI |
-|--------|-------------------------|
-| Master | [![Circle CI](https://circleci.com/gh/expede/brainfucker/tree/master.svg?style=svg)](https://circleci.com/gh/expede/brainfucker/tree/master) |
