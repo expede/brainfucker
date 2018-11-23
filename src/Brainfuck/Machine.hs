@@ -1,5 +1,4 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
 module Brainfuck.Machine
@@ -27,8 +26,7 @@ data Machine = Machine
   , _tape      :: Tape
   , _cellPtr   :: Pointer
   , _jumpStack :: [Pointer]
-  }
-  deriving Show
+  } deriving Show
 
 makeLenses ''Machine
 
