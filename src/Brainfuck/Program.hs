@@ -7,8 +7,7 @@ module Brainfuck.Program
   ) where
 
 import           ClassyPrelude
-import           Data.Vector           (Vector)
-import           Data.Vector           ((!?))
+import           Data.Vector           (Vector, (!?))
 
 import           Brainfuck.Cell        (Math)
 import           Brainfuck.Control     (Control (..))
@@ -34,8 +33,8 @@ findLoopEnd program = go 0
         Nothing           -> error $ show pointer <> " loop is missing a `]`!"
 
         Just (Loop End)   -> if depth == 0
-                              then pointer
-                              else go (pred depth) (succ pointer)
+                               then pointer
+                               else go (pred depth) (succ pointer)
 
         Just (Loop Begin) -> go (succ depth) (succ pointer)
         _                 -> go depth        (succ pointer)
