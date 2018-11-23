@@ -56,9 +56,9 @@ interpret m@(Machine { .. }) = \case
   Loop ctrl  ->
     case (ctrl, _tape !? _cellPtr) of
       (_,     Nothing) -> error $ show _cellPtr <> " is not a cell location on the tape!!"
-      (Begin, Just 0)  -> m & jumpToLoopEnd & prep
-      (Begin, _)       -> m & jumpStack %~ cons _pc & prep
-      (End,   Just 0)  -> m & jumpStack %~ tailEx & prep
+      (Begin, Just 0)  -> m & pc        %~ findLoopEnd _program & prep
+      (Begin, _)       -> m & jumpStack %~ cons _pc             & prep
+      (End,   Just 0)  -> m & jumpStack %~ tailEx               & prep
       (End,   _)       ->
         case _jumpStack of
           (loc : _) -> m & pc .~ loc & prep

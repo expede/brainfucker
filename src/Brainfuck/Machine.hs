@@ -12,16 +12,13 @@ module Brainfuck.Machine
   , program
   , setup
   , tape
-  , jumpToLoopEnd
   ) where
 
 import           ClassyPrelude
 import           Control.Lens      (makeLenses, (&), (.~))
-import           Data.Vector       ((!?))
 
-import           Brainfuck.Control (Control (..))
 import           Brainfuck.Pointer (Pointer)
-import           Brainfuck.Program (Opcode (..), Program)
+import           Brainfuck.Program (Program)
 import           Brainfuck.Tape    (Tape)
 
 data Machine = Machine
@@ -46,18 +43,3 @@ blank = Machine
   , _program   = empty
   , _tape      = replicate 30000 0
   }
-
-jumpToLoopEnd ::  Machine -> Machine
-jumpToLoopEnd m@(Machine {..}) = go 0 _pc
-  where go :: Word8 -> Pointer -> Machine
-        go depth counter =
-          case _program !? counter of
-            Nothing -> error $ show counter <> " loop is missing a `]`!"
-
-            Just (Loop End) ->
-              if depth == 0
-                then m & pc .~ counter
-                else go (pred depth) (succ counter)
-
-            Just (Loop Begin) -> go (succ depth) (succ counter)
-            _                 -> go depth        (succ counter)
