@@ -58,11 +58,7 @@ interpret m@(Machine { .. }) = \case
       (_,     Nothing) -> error $ show _cellPtr <> " is not a cell location on the tape!!"
       (Begin, Just 0)  -> m & jumpToLoopEnd & prep
       (Begin, _)       -> m & jumpStack %~ cons _pc & prep
-      (End,   Just 0)  ->
-        m & jumpStack %~ \case
-            [] -> []
-            (_:xs) -> xs
-          & prep
+      (End,   Just 0)  -> m & jumpStack %~ tailEx & prep
       (End,   _)       ->
         case headMay _jumpStack of
           Nothing       -> error "Program error: nowhere left to jump back to!"
